@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (large files)
+data/filings/
+data/trees/
+*.pdf
+!references/*.pdf
+
+# Ollama models (managed by Ollama)
+/models/
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Streamlit
+.streamlit/
+
+# iPhone build artifacts
+iphone/FinSightLite/build/
+iphone/FinSightLite/DerivedData/
+iphone/FinSightLite/*.xcworkspace/xcuserdata/
+iphone/FinSightLite/*.xcodeproj/xcuserdata/
+
+# GGUF model files (too large for git)
+*.gguf
+
+# uv
+.python-version
+uv.lock

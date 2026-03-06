@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finsight.dev/schemas/tree_node.schema.json",
+  "title": "PageIndexTree",
+  "description": "Complete PageIndex tree structure for a financial document",
+  "type": "object",
+  "required": ["doc_name", "structure"],
+  "properties": {
+    "doc_name": {
+      "type": "string",
+      "description": "Source document filename"
+    },
+    "doc_description": {
+      "type": ["string", "null"],
+      "description": "One-sentence document description"
+    },
+    "structure": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/TreeNode" },
+      "description": "Top-level sections of the document tree"
+    }
+  },
+  "$defs": {
+    "TreeNode": {
+      "type": "object",
+      "required": ["title", "node_id", "start_index", "end_index"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Section heading from the document"
+        },
+        "node_id": {
+          "type": "string",
+          "description": "Sequential 4-digit ID assigned via DFS (e.g., '0003')"
+        },
+        "start_index": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "First physical page number (1-indexed, inclusive)"
+        },
+        "end_index": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Last physical page number (1-indexed, inclusive)"
+        },
+        "summary": {
+          "type": ["string", "null"],
+          "description": "LLM-generated summary of this section"
+        },
+        "text": {
+          "type": ["string", "null"],
+          "description": "Raw page text for this section's pages"
+        },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/TreeNode" },
+          "default": [],
+          "description": "Child sections (recursive)"
+        }
+      }
+    }
+  }
+}

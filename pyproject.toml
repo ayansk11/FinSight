@@ -1,0 +1,41 @@
+[project]
+name = "finsight-workspace"
+version = "0.1.0"
+description = "Agentic Financial Document Intelligence & Risk Analyst"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "finsight-core",
+    "finsight-mac",
+]
+
+[tool.uv.workspace]
+members = ["shared", "mac"]
+
+[tool.uv.sources]
+finsight-core = { workspace = true }
+finsight-mac = { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"shared/src/finsight_core/prompts/*.py" = ["E501"]
+"mac/src/finsight_mac/document/docling_processor.py" = ["F401"]

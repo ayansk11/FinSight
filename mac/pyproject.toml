@@ -1,0 +1,43 @@
+[project]
+name = "finsight-mac"
+version = "0.1.0"
+description = "FinSight Mac — Full agentic financial analysis system"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "finsight-core",
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
+    "openai>=1.50",
+    "pageindex>=0.2",
+    "streamlit>=1.40",
+    "chromadb>=0.5",
+    "pymupdf>=1.24",
+    "tiktoken>=0.7",
+    "pydantic-settings>=2.0",
+    "python-dotenv>=1.0",
+    "httpx>=0.27",
+    "aiohttp>=3.10",
+]
+
+[project.optional-dependencies]
+# Docling: AI-powered document conversion (layout analysis, table extraction, XBRL)
+# Adds ~1-2GB of ML model downloads on first use
+docling = [
+    "docling>=2.70",
+    "docling-core>=2.60",
+]
+# XBRL parsing for SEC inline XBRL filings
+xbrl = [
+    "docling[xbrl]>=2.70",
+]
+
+[tool.uv.sources]
+finsight-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/finsight_mac"]

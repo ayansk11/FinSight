@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finsight.dev/schemas/finding.schema.json",
+  "title": "Finding",
+  "description": "An analytical finding produced by a FinSight agent",
+  "type": "object",
+  "required": ["content", "agent", "confidence"],
+  "properties": {
+    "content": {
+      "type": "string",
+      "description": "The finding text"
+    },
+    "agent": {
+      "type": "string",
+      "enum": ["doc_intel", "quant", "risk", "synthesis"],
+      "description": "Which agent produced this finding"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Confidence level"
+    },
+    "citations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Citation" },
+      "default": []
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "Citation": {
+      "type": "object",
+      "required": ["filing_display_name", "node_id", "section_title", "page_start", "page_end"],
+      "properties": {
+        "filing_display_name": { "type": "string" },
+        "node_id": { "type": "string" },
+        "section_title": { "type": "string" },
+        "page_start": { "type": "integer" },
+        "page_end": { "type": "integer" },
+        "excerpt": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

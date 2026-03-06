@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finsight.dev/schemas/export_bundle.schema.json",
+  "title": "ExportBundle",
+  "description": "Analysis bundle for Mac-to-iPhone transfer (.finsight files)",
+  "type": "object",
+  "required": ["version", "model_used", "filing", "tree"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "default": "1.0"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "model_used": {
+      "type": "string",
+      "description": "LLM model that generated this analysis"
+    },
+    "filing": {
+      "type": "object",
+      "required": ["ticker", "company_name", "filing_type", "filing_date"],
+      "properties": {
+        "ticker": { "type": "string" },
+        "company_name": { "type": "string" },
+        "filing_type": { "type": "string" },
+        "filing_date": { "type": "string", "format": "date" },
+        "fiscal_year": { "type": ["integer", "null"] },
+        "fiscal_quarter": { "type": ["integer", "null"] }
+      }
+    },
+    "tree": {
+      "$ref": "tree_node.schema.json"
+    },
+    "findings": {
+      "type": "array",
+      "items": { "$ref": "finding.schema.json" },
+      "default": []
+    },
+    "risk_scores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tactic", "technique_id", "technique_name", "severity", "confidence", "evidence"],
+        "properties": {
+          "tactic": { "type": "string" },
+          "technique_id": { "type": "string" },
+          "technique_name": { "type": "string" },
+          "severity": { "type": "number", "minimum": 0, "maximum": 1 },
+          "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+          "evidence": { "type": "string" }
+        }
+      },
+      "default": []
+    },
+    "executive_summary": { "type": ["string", "null"] },
+    "full_report": { "type": ["string", "null"] }
+  }
+}

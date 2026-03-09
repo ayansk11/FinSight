@@ -57,13 +57,26 @@ def build_synthesis_prompt(
     quant_findings: str,
     risk_findings: str,
     filing_names: list[str],
+    rlm_analysis: str | None = None,
 ) -> str:
     """Build the synthesis prompt with all agent findings."""
+    rlm_section = ""
+    if rlm_analysis:
+        rlm_section = f"""
+## Cross-Document RLM Analysis
+The following cross-document reasoning was performed using RLM:
+{rlm_analysis}
+
+Use this analysis as the primary basis for your synthesis,
+enriched with the individual agent findings below.
+
+"""
+
     return f"""## Task: Synthesize Financial Analysis Report
 
 **Query:** {query}
 **Filings Analyzed:** {', '.join(filing_names)}
-
+{rlm_section}
 ## Document Intelligence Findings
 {doc_intel_findings}
 

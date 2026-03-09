@@ -81,17 +81,18 @@ def _render_load_trees() -> None:
 
 
 def _render_upload_pdf() -> None:
-    """Upload a PDF and optionally generate a PageIndex tree."""
+    """Upload a PDF and generate a PageIndex tree."""
     st.subheader("Upload PDF")
-    st.info(
+    st.caption(
         "Upload a SEC filing PDF to generate a PageIndex tree. "
-        "Requires an OpenAI API key for tree generation."
+        "Use Local Ollama (no API key) or Cloud API."
     )
 
     uploaded = st.file_uploader("Upload SEC Filing PDF", type=["pdf"], key="pdf_upload")
 
     if uploaded:
         from finsight_mac.config import get_settings
+
         settings = get_settings()
 
         # Save uploaded file
@@ -100,29 +101,58 @@ def _render_upload_pdf() -> None:
         save_path.write_bytes(uploaded.read())
         st.success(f"PDF saved to {save_path}")
 
-        if settings.openai_api_key:
-            if st.button("Generate PageIndex Tree"):
-                with st.spinner("Generating tree (this may take a few minutes)..."):
-                    try:
-                        from finsight_mac.document.pipeline import DocumentPipeline
-                        pipeline = DocumentPipeline()
-                        tree = pipeline.generate_tree(str(save_path))
-                        st.success(f"Tree generated! {tree.total_nodes} nodes")
+        col1, col2 = st.columns(2)
 
-                        if "loaded_trees" not in st.session_state:
-                            st.session_state.loaded_trees = {}
-                        name = save_path.stem
-                        st.session_state.loaded_trees[name] = json.loads(
-                            tree.model_dump_json()
-                        )
-                    except Exception as e:
-                        st.error(f"Tree generation failed: {e}")
-        else:
-            st.warning(
-                "Set `OPENAI_API_KEY` in `.env` to enable automatic tree generation. "
-                "Alternatively, generate trees using the CLI: "
-                "`python scripts/generate_tree.py --pdf <path>`"
-            )
+        with col1:
+            if st.button("Generate with Local Ollama", type="primary"):
+                with st.spinner("Generating tree with Ollama..."):
+                    _generate_tree_local(save_path)
+
+        with col2:
+            has_api_key = bool(settings.openai_api_key)
+            if st.button("Generate with Cloud API", disabled=not has_api_key):
+                with st.spinner("Generating tree with Cloud API..."):
+                    _generate_tree_cloud(save_path)
+            if not has_api_key:
+                st.caption("Set `OPENAI_API_KEY` in `.env`")
+
+
+def _generate_tree_local(save_path: Path) -> None:
+    """Generate a tree using local Ollama."""
+    import asyncio
+
+    try:
+        from finsight_mac.document.pipeline import DocumentPipeline
+
+        pipeline = DocumentPipeline()
+        tree = asyncio.run(
+            pipeline.generate_tree_local(str(save_path))
+        )
+        _store_tree(save_path.stem, tree)
+    except Exception as e:
+        st.error(f"Local tree generation failed: {e}")
+
+
+def _generate_tree_cloud(save_path: Path) -> None:
+    """Generate a tree using the Cloud API."""
+    try:
+        from finsight_mac.document.pipeline import DocumentPipeline
+
+        pipeline = DocumentPipeline()
+        tree = pipeline.generate_tree(str(save_path))
+        _store_tree(save_path.stem, tree)
+    except Exception as e:
+        st.error(f"Cloud tree generation failed: {e}")
+
+
+def _store_tree(name: str, tree) -> None:
+    """Store a generated tree in session state."""
+    if "loaded_trees" not in st.session_state:
+        st.session_state.loaded_trees = {}
+    st.session_state.loaded_trees[name] = json.loads(
+        tree.model_dump_json()
+    )
+    st.success(f"Tree generated: {tree.total_nodes} nodes")
 
 
 def _load_tree_file(path: Path, name: str) -> None:

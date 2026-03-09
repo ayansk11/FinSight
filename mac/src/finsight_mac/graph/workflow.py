@@ -37,16 +37,18 @@ async def router_node(state: FinSightState) -> dict:
     return {
         "route": result["route"],
         "agents_to_run": result["agents_to_run"],
+        "needs_rlm": result.get("needs_rlm", False),
     }
 
 
 async def doc_intel_node(state: FinSightState) -> dict:
-    """Run the Document Intelligence Agent."""
+    """Run the Document Intelligence Agent on all filings."""
     from finsight_core.pageindex.parser import load_tree_from_dict
     from finsight_core.pageindex.text_extractor import extract_pages_from_pdf
 
     query = state["query"]
     trees_data = state.get("trees", [])
+    filings = state.get("filings", [])
 
     if not trees_data:
         return {
@@ -54,48 +56,71 @@ async def doc_intel_node(state: FinSightState) -> dict:
             "agent_summaries": [{"agent": "doc_intel", "summary": "No documents loaded."}],
         }
 
-    # Process first tree (single-doc for now)
-    tree_data = trees_data[0]
-    tree = load_tree_from_dict(tree_data)
+    all_findings = []
+    all_summaries = []
+    all_page_texts: dict[str, dict[int, str]] = {}
 
-    # Try to get page texts from PDF
-    filings = state.get("filings", [])
-    pdf_path = filings[0].get("pdf_path") if filings else None
-    page_texts = None
-    if pdf_path:
-        try:
-            page_texts = extract_pages_from_pdf(pdf_path)
-        except Exception as e:
-            logger.warning(f"Could not extract PDF text: {e}")
+    for i, tree_data in enumerate(trees_data):
+        tree = load_tree_from_dict(tree_data)
+        pdf_path = filings[i].get("pdf_path") if i < len(filings) else None
+        filing_name = (
+            filings[i].get("display_name", tree.doc_name)
+            if i < len(filings)
+            else tree.doc_name
+        )
 
-    filing_name = filings[0].get("display_name", tree.doc_name) if filings else tree.doc_name
+        page_texts = None
+        if pdf_path:
+            try:
+                page_texts = extract_pages_from_pdf(pdf_path)
+            except Exception as e:
+                logger.warning(f"Could not extract PDF text for {filing_name}: {e}")
 
-    output = await run_doc_intel_agent(
-        query=query,
-        tree=tree,
-        pdf_path=pdf_path,
-        page_texts=page_texts,
-        filing_display_name=filing_name,
-    )
+        if page_texts:
+            all_page_texts[filing_name] = page_texts
+
+        output = await run_doc_intel_agent(
+            query=query,
+            tree=tree,
+            pdf_path=pdf_path,
+            page_texts=page_texts,
+            filing_display_name=filing_name,
+        )
+
+        all_findings.extend(f.model_dump() for f in output.findings)
+        all_summaries.append(
+            {"agent": "doc_intel", "summary": output.summary, "duration": output.duration_seconds}
+        )
 
     return {
-        "findings": [f.model_dump() for f in output.findings],
-        "agent_summaries": [
-            {"agent": "doc_intel", "summary": output.summary, "duration": output.duration_seconds}
-        ],
+        "findings": all_findings,
+        "agent_summaries": all_summaries,
+        "page_texts_by_filing": all_page_texts,
     }
 
 
 async def quant_node(state: FinSightState) -> dict:
     """Run the Quantitative Analysis Agent."""
+    from finsight_mac.mcp.market_data import fetch_market_data
+
     query = state["query"]
     ticker = state.get("ticker", "")
     doc_findings = state.get("findings", [])
+
+    # Fetch real market data from MCP servers (FRED, Finnhub, yfinance)
+    market_data = None
+    if ticker:
+        try:
+            market_data = await fetch_market_data(ticker)
+            logger.info(f"[Quant] Fetched {len(market_data)} market data points for {ticker}")
+        except Exception as e:
+            logger.warning(f"[Quant] Market data fetch failed: {e}")
 
     output = await run_quant_agent(
         query=query,
         ticker=ticker,
         doc_intel_findings=doc_findings,
+        market_data=market_data,
     )
 
     return {
@@ -164,6 +189,85 @@ async def synthesis_node(state: FinSightState) -> dict:
     }
 
 
+async def rlm_synthesis_node(state: FinSightState) -> dict:
+    """Run RLM-powered cross-document synthesis."""
+    from finsight_core.pageindex.parser import load_tree_from_dict
+
+    from finsight_mac.llm.rlm_client import RLMClient
+
+    query = state["query"]
+    trees_data = state.get("trees", [])
+    filings = state.get("filings", [])
+    page_texts_by_filing = state.get("page_texts_by_filing", {})
+    summaries = state.get("agent_summaries", [])
+
+    # Build tree outlines for RLM
+    filing_names: list[str] = []
+    tree_outlines: dict[str, str] = {}
+    for i, tree_data in enumerate(trees_data):
+        tree = load_tree_from_dict(tree_data)
+        name = (
+            filings[i].get("display_name", tree.doc_name)
+            if i < len(filings)
+            else tree.doc_name
+        )
+        filing_names.append(name)
+        tree_outlines[name] = tree.get_tree_outline(max_depth=4)
+
+    # Run RLM cross-document analysis
+    client = RLMClient()
+    rlm_result = await client.analyze_cross_document(
+        query=query,
+        filing_names=filing_names,
+        tree_outlines=tree_outlines,
+        page_texts=page_texts_by_filing,
+    )
+
+    # Feed RLM analysis + upstream findings into synthesis
+    doc_output = _find_agent_output(
+        summaries, "doc_intel", state.get("findings", [])
+    )
+    quant_output = _find_agent_output(
+        summaries, "quant", state.get("findings", [])
+    )
+    risk_output = _find_agent_output(
+        summaries, "risk", state.get("findings", [])
+    )
+
+    output = await run_synthesis_agent(
+        query=query,
+        doc_intel_output=doc_output,
+        quant_output=quant_output,
+        risk_output=risk_output,
+        filing_names=filing_names,
+        rlm_analysis=rlm_result.answer if rlm_result.success else None,
+    )
+
+    report = ""
+    exec_summary = output.summary
+    if output.findings:
+        report = output.findings[0].content
+
+    return {
+        "report": report,
+        "executive_summary": exec_summary,
+        "findings": [f.model_dump() for f in output.findings],
+        "agent_summaries": [
+            {
+                "agent": "rlm_synthesis",
+                "summary": output.summary,
+                "duration": output.duration_seconds,
+            }
+        ],
+        "rlm_result": {
+            "answer": rlm_result.answer,
+            "method": rlm_result.method,
+            "iterations": rlm_result.iterations,
+            "success": rlm_result.success,
+        },
+    }
+
+
 def _find_agent_output(
     summaries: list[dict], agent_name: str, all_findings: list[dict]
 ) -> AgentOutput | None:
@@ -200,6 +304,15 @@ def should_run_risk(state: FinSightState) -> str:
     agents = state.get("agents_to_run", [])
     if "risk" in agents:
         return "risk"
+    if state.get("needs_rlm"):
+        return "rlm_synthesis"
+    return "synthesis"
+
+
+def should_use_rlm(state: FinSightState) -> str:
+    """After risk, branch on whether RLM cross-doc reasoning is needed."""
+    if state.get("needs_rlm"):
+        return "rlm_synthesis"
     return "synthesis"
 
 
@@ -219,6 +332,7 @@ def build_workflow() -> StateGraph:
     workflow.add_node("quant", quant_node)
     workflow.add_node("risk", risk_node)
     workflow.add_node("synthesis", synthesis_node)
+    workflow.add_node("rlm_synthesis", rlm_synthesis_node)
 
     # Set entry point
     workflow.set_entry_point("router")
@@ -230,21 +344,26 @@ def build_workflow() -> StateGraph:
     workflow.add_conditional_edges(
         "doc_intel",
         should_run_quant,
-        {"quant": "quant", "check_risk": "risk"},  # will be checked again
+        {"quant": "quant", "check_risk": "risk"},
     )
 
-    # After quant, conditionally run risk
+    # After quant, conditionally run risk (or skip to RLM/synthesis)
     workflow.add_conditional_edges(
         "quant",
         should_run_risk,
-        {"risk": "risk", "synthesis": "synthesis"},
+        {"risk": "risk", "synthesis": "synthesis", "rlm_synthesis": "rlm_synthesis"},
     )
 
-    # Risk always goes to synthesis
-    workflow.add_edge("risk", "synthesis")
+    # After risk, branch on RLM vs standard synthesis
+    workflow.add_conditional_edges(
+        "risk",
+        should_use_rlm,
+        {"rlm_synthesis": "rlm_synthesis", "synthesis": "synthesis"},
+    )
 
-    # Synthesis goes to END
+    # Both synthesis paths go to END
     workflow.add_edge("synthesis", END)
+    workflow.add_edge("rlm_synthesis", END)
 
     return workflow.compile()
 

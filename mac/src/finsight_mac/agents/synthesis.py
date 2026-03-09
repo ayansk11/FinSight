@@ -28,6 +28,7 @@ async def run_synthesis_agent(
     quant_output: AgentOutput | None = None,
     risk_output: AgentOutput | None = None,
     filing_names: list[str] | None = None,
+    rlm_analysis: str | None = None,
     llm: OllamaClient | None = None,
 ) -> AgentOutput:
     """Execute the Synthesis & Report Agent.
@@ -58,6 +59,7 @@ async def run_synthesis_agent(
         quant_findings=quant_findings_text,
         risk_findings=risk_findings_text,
         filing_names=filing_names,
+        rlm_analysis=rlm_analysis,
     )
 
     try:

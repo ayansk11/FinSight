@@ -56,3 +56,6 @@ iphone/FinSightLite/*.xcodeproj/xcuserdata/
 # uv
 .python-version
 uv.lock
+
+# Local config
+.claude/

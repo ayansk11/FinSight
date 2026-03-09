@@ -6,7 +6,7 @@ risk scores, and metadata that the iPhone app can import via AirDrop or Files.
 
 Usage:
     python scripts/export_for_iphone.py --tree trees/aapl_10k_structure.json
-    python scripts/export_for_iphone.py --tree trees/aapl_10k_structure.json --findings analysis/aapl_findings.json
+    python scripts/export_for_iphone.py --tree trees/aapl.json --findings findings.json
     python scripts/export_for_iphone.py --all  # Export all available trees
 """
 
@@ -16,8 +16,12 @@ import argparse
 import json
 import logging
 import sys
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from finsight_core.models.document import PageIndexTree
 
 # Add project root to path for development
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared" / "src"))
@@ -80,8 +84,6 @@ Examples:
     )
 
     from finsight_core.models.analysis import Finding, RiskScore
-    from finsight_core.models.document import Filing, FilingType, PageIndexTree
-    from finsight_core.models.export import ExportBundle
     from finsight_core.pageindex.parser import load_tree
     from finsight_mac.config import get_settings
 
@@ -162,7 +164,7 @@ Examples:
 
 
 def _export_tree(
-    tree: "PageIndexTree",
+    tree: PageIndexTree,
     doc_name: str,
     output_dir: Path,
     model_name: str,

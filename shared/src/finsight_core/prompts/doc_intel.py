@@ -65,14 +65,32 @@ def build_tree_navigation_prompt(
 **Filing:** {filing_name}
 **Query:** {query}
 
+## SEC Filing Section Guide (10-K / 10-Q)
+Use this guide to understand each section's PURPOSE:
+- **Item 1 / Business** → Company description, products, competition, strategy
+- **Item 1A / Risk Factors** → PRIMARY source for risk-related queries (business risks, market risks, regulatory risks)
+- **Item 7 / MD&A** → Revenue analysis, operating expenses, margins, liquidity, capital resources
+- **Item 8 / Financial Statements** → Balance sheet, income statement, cash flow, and Notes
+- **Notes 1-4** → Accounting policies, revenue breakdown, EPS, financial instruments
+- **Notes 8-10** → Leases, debt, shareholders' equity
+- **Notes 11-13** → Compensation, commitments, segment data
+- **Item 9A / Controls and Procedures** → Internal control assessment (procedural, NOT business risks)
+- **Auditor Reports / Opinions** → Audit opinions on financial statements (NOT risk factors)
+
+CRITICAL: Match sections by their CONTENT PURPOSE, not just keyword overlap.
+- "Item 1A. Risk Factors" discusses BUSINESS risks. Audit opinions discuss PROCEDURAL controls.
+- For risk queries → prioritize Item 1A and its subsections
+- For revenue/financial queries → prioritize MD&A, Financial Statements, Revenue notes
+- For strategy queries → prioritize Item 1 Business, MD&A
+
 ## Document Tree Structure
 {tree_outline}
 
 ## Instructions
-Examine the tree structure above and identify which sections (by node_id) are most likely to contain information relevant to the query. Consider:
-1. Section titles that directly relate to the query topic
-2. Sections that typically contain this type of information in SEC filings
-3. Cross-reference sections that may provide supporting data
+Select 2-5 sections whose PURPOSE best matches the query intent:
+1. Sections with titles that DIRECTLY name the query topic (highest priority)
+2. Sections with supporting quantitative data (MD&A, Financial Statements)
+3. Cross-reference sections only if primary sections are insufficient
 
 Return a JSON object:
 {{
@@ -80,7 +98,7 @@ Return a JSON object:
     "reasoning": "Brief explanation of why these sections were selected"
 }}
 
-Select 1-5 most relevant sections. Prefer specific subsections over broad parent sections."""
+Prefer specific subsections over broad parent sections. Do NOT select audit opinions or internal control sections unless the query explicitly asks about auditing or controls."""
 
 
 def build_section_analysis_prompt(

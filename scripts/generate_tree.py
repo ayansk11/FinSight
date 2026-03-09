@@ -144,12 +144,13 @@ Examples:
         )
 
         print()
-        print(f"Tree generated successfully!")
+        print("Tree generated successfully!")
         print(f"  Document: {tree.doc_name}")
         print(f"  Description: {tree.doc_description or 'None'}")
         print(f"  Total nodes: {tree.total_nodes}")
         print(f"  Leaf nodes: {len(tree.leaf_nodes)}")
-        print(f"  Saved to: {pipeline.settings.trees_dir / f'{args.name or pdf_path.stem}_structure.json'}")
+        out_name = f"{args.name or pdf_path.stem}_structure.json"
+        print(f"  Saved to: {pipeline.settings.trees_dir / out_name}")
 
     except ImportError as e:
         print(f"Error: {e}")

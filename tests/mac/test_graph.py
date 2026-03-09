@@ -38,3 +38,13 @@ class TestRouter:
     def test_synthesis_always_included(self) -> None:
         result = classify_query("What is Apple's P/E ratio?")
         assert "synthesis" in result["agents_to_run"]
+
+    def test_multi_doc_needs_rlm(self) -> None:
+        result = classify_query("Compare Apple's risk factors", num_filings=3)
+        assert result["needs_rlm"] is True
+        assert result["route"] == "multi_doc"
+        assert "doc_intel" in result["agents_to_run"]
+
+    def test_single_doc_no_rlm(self) -> None:
+        result = classify_query("What are Apple's risk factors?", num_filings=1)
+        assert result["needs_rlm"] is False

@@ -25,7 +25,7 @@ class Settings(BaseSettings):
         description="Ollama model name. Options: qwen3.5:9b (default), qwen3:8b-q4_K_M, qwen3.5:4b",
     )
     ollama_timeout: int = Field(
-        default=120,
+        default=300,
         description="Request timeout in seconds for Ollama API calls",
     )
     max_context_tokens: int = Field(
@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     )
 
     # --- PageIndex Configuration ---
+    pageindex_api_key: str | None = Field(
+        default=None,
+        description="PageIndex Cloud API key (free tier: 200 pages)",
+    )
     pageindex_model: str = Field(
         default="gpt-4o-2024-11-20",
         description="Model used for PageIndex tree generation (requires OpenAI API key)",

@@ -16,6 +16,14 @@ st.set_page_config(
 def main() -> None:
     """Main Streamlit application."""
 
+    # Initialize session state
+    if "loaded_trees" not in st.session_state:
+        st.session_state.loaded_trees = {}
+    if "last_result" not in st.session_state:
+        st.session_state.last_result = None
+    if "ticker" not in st.session_state:
+        st.session_state.ticker = ""
+
     # Sidebar navigation
     st.sidebar.title("FinSight")
     st.sidebar.caption("Agentic Financial Document Intelligence")
@@ -25,6 +33,21 @@ def main() -> None:
         ["Chat", "Documents", "Analysis"],
         index=0,
     )
+
+    st.sidebar.divider()
+
+    # Ticker input
+    st.sidebar.text_input(
+        "Ticker Override",
+        key="ticker",
+        placeholder="e.g. AAPL",
+        help="Auto-detected from document name if left blank.",
+    )
+
+    # Loaded documents count
+    doc_count = len(st.session_state.loaded_trees)
+    if doc_count:
+        st.sidebar.caption(f"Documents loaded: {doc_count}")
 
     st.sidebar.divider()
 

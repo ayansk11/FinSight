@@ -10,10 +10,11 @@ FinSight is a multi-agent AI system that analyzes SEC filings (10-K, 10-Q, 8-K) 
 
 - **Multi-Agent LangGraph Workflow** — Four specialized agents (Document Intelligence, Quantitative Analysis, Risk Classification, Synthesis) orchestrated via LangGraph StateGraph with conditional routing
 - **PageIndex Tree Navigation** — Hierarchical document structure maps for precise section-level extraction with citations
-- **Local Ollama Inference** — Runs entirely offline using Qwen3.5 via Ollama — no API keys required for core analysis
+- **Docling Document AI** — IBM's AI-powered document conversion with layout analysis, table extraction, and structured Markdown output as the default PDF processor
+- **Local Ollama Inference** — Runs entirely offline using Qwen3.5 via Ollama — no API keys required for core analysis. Supports multiple models (Qwen3.5:9b, Qwen3:8b, Qwen3.5:4b, or any Ollama-compatible model)
 - **Market Data Integration** — Real-time financial data from Yahoo Finance, FRED, and Finnhub via MCP-style data servers
 - **MITRE F3 Risk Framework** — Risk classification using a financial threat taxonomy inspired by MITRE ATT&CK
-- **Cross-Document Reasoning (RLM)** — Recursive Language Model integration for multi-filing comparative analysis
+- **Cross-Document Reasoning (RLM)** — Recursive Language Model integration for multi-filing comparative analysis. When multiple filings are loaded, the router activates RLM synthesis for cross-document reasoning with iterative refinement (up to 15 iterations)
 - **Local Tree Generation** — Heuristic heading detection + Ollama refinement for generating document structure trees from raw PDFs
 - **Streamlit Web UI** — Interactive chat interface, document manager, analysis dashboard with findings/risk scores/export
 - **iPhone Export** — `.finsight` bundle export for companion iOS app
@@ -289,6 +290,37 @@ The Router analyzes query intent and selects the appropriate agent combination:
 | `risk_focused` | doc_intel → risk → synthesis | Risk factors, governance, fraud |
 | `multi_doc` | doc_intel → quant/risk → RLM synthesis | Cross-filing comparison queries |
 
+### Supported LLM Models
+
+FinSight uses Ollama for local inference and supports any Ollama-compatible model. Configure via the `OLLAMA_MODEL` environment variable:
+
+| Model | Size | Notes |
+|---|---|---|
+| `qwen3.5:9b` | ~6GB | Default — best balance of quality and speed |
+| `qwen3:8b-q4_K_M` | ~5GB | Quantized variant, faster on limited RAM |
+| `qwen3.5:4b` | ~3GB | Lightweight, good for quick queries |
+| Any Ollama model | Varies | Pass any model name via `OLLAMA_MODEL` |
+
+### Recursive Language Model (RLM)
+
+When multiple filings are loaded (e.g., comparing AAPL 10-K 2023 vs 2024), the Router automatically activates **RLM synthesis** instead of standard synthesis. RLM performs iterative cross-document reasoning:
+
+1. Generates initial comparative analysis from all upstream findings
+2. Iteratively refines the analysis (up to `MAX_RLM_ITERATIONS`, default 15)
+3. Produces a unified cross-filing report with comparative insights
+
+RLM is triggered automatically — no configuration needed beyond loading multiple documents.
+
+### Docling Document AI
+
+FinSight uses [Docling](https://github.com/DS4SD/docling) (IBM) as its default PDF processor for:
+
+- **Layout analysis** — Correct reading order for multi-column layouts
+- **Table extraction** — Structured table data from financial statements
+- **Page-level Markdown** — Clean formatted text preserving document structure
+
+Docling results are cached to disk for fast reprocessing. Falls back to PyMuPDF if Docling processing fails on a specific document.
+
 ### Risk Classification
 
 The Risk Agent uses a financial threat taxonomy inspired by MITRE ATT&CK:
@@ -315,8 +347,10 @@ Each risk receives a severity score (0.0–1.0) with supporting evidence and cit
 | Component | Technology |
 |---|---|
 | Orchestration | LangGraph (StateGraph) |
-| LLM | Ollama + Qwen3.5 (local) |
+| LLM | Ollama (Qwen3.5:9b default, multi-model) |
+| Document AI | Docling (IBM) — layout analysis, tables |
 | Document Parsing | PyMuPDF, PageIndex |
+| Cross-Doc Reasoning | RLM (Recursive Language Model) |
 | Market Data | yfinance, FRED API, Finnhub |
 | Data Models | Pydantic v2 |
 | Web UI | Streamlit |

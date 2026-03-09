@@ -20,15 +20,11 @@ dependencies = [
     "aiohttp>=3.10",
     "fredapi>=0.5",
     "yfinance>=0.2",
-]
-
-[project.optional-dependencies]
-# Docling: AI-powered document conversion (layout analysis, table extraction, XBRL)
-# Adds ~1-2GB of ML model downloads on first use
-docling = [
     "docling>=2.70",
     "docling-core>=2.60",
 ]
+
+[project.optional-dependencies]
 # XBRL parsing for SEC inline XBRL filings
 xbrl = [
     "docling[xbrl]>=2.70",

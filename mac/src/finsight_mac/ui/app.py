@@ -5,6 +5,15 @@ Launch with: uv run streamlit run mac/src/finsight_mac/ui/app.py
 
 import streamlit as st
 
+# Available Ollama models for the Mac platform.
+MAC_MODELS: list[tuple[str, str]] = [
+    ("Qwen3.5-9B (Default)", "qwen3.5:9b"),
+    ("Qwen3-8B (RLM Fine-tuned)", "qwen3:8b-q4_K_M"),
+    ("Qwen3.5-4B", "qwen3.5:4b"),
+    ("Qwen3.5-2B", "qwen3.5:2b"),
+    ("Qwen3.5-0.8B", "qwen3.5:0.8b"),
+]
+
 st.set_page_config(
     page_title="FinSight",
     page_icon="🔍",
@@ -23,6 +32,8 @@ def main() -> None:
         st.session_state.last_result = None
     if "ticker" not in st.session_state:
         st.session_state.ticker = ""
+    if "selected_model" not in st.session_state:
+        st.session_state.selected_model = "qwen3.5:9b"
 
     # Sidebar navigation
     st.sidebar.title("FinSight")
@@ -56,7 +67,7 @@ def main() -> None:
     _show_model_status()
 
     st.sidebar.divider()
-    st.sidebar.caption("Built with LangGraph + PageIndex + Qwen3.5")
+    st.sidebar.caption("Built with LangGraph + PageIndex + Ollama")
 
     # Route to selected page
     if page == "Chat":
@@ -71,16 +82,33 @@ def main() -> None:
 
 
 def _show_model_status() -> None:
-    """Display current model and Ollama connection status."""
+    """Display model selector dropdown and Ollama connection status."""
     from finsight_mac.config import get_settings
 
     settings = get_settings()
-    st.sidebar.text(f"Model: {settings.ollama_model}")
+
+    # Model selector dropdown
+    labels = [label for label, _ in MAC_MODELS]
+    model_ids = [mid for _, mid in MAC_MODELS]
+
+    current_idx = 0
+    if st.session_state.selected_model in model_ids:
+        current_idx = model_ids.index(st.session_state.selected_model)
+
+    selected_label = st.sidebar.selectbox(
+        "Model",
+        labels,
+        index=current_idx,
+    )
+    st.session_state.selected_model = model_ids[labels.index(selected_label)]
+
+    selected_model = st.session_state.selected_model
     st.sidebar.text(f"Ollama: {settings.ollama_base_url}")
 
     # Quick health check
     try:
         import httpx
+
         response = httpx.get(
             f"{settings.ollama_base_url}/api/tags",
             timeout=2,
@@ -88,11 +116,11 @@ def _show_model_status() -> None:
         if response.status_code == 200:
             models = response.json().get("models", [])
             model_names = [m["name"] for m in models]
-            if any(settings.ollama_model in n for n in model_names):
+            if any(selected_model in n for n in model_names):
                 st.sidebar.success("Connected", icon="✅")
             else:
                 st.sidebar.warning(
-                    f"Model not found. Available: {', '.join(model_names[:3])}",
+                    f"Model not found. Pull with: ollama pull {selected_model}",
                     icon="⚠️",
                 )
         else:

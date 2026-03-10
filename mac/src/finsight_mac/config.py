@@ -22,7 +22,10 @@ class Settings(BaseSettings):
     )
     ollama_model: str = Field(
         default="qwen3.5:9b",
-        description="Ollama model name. Options: qwen3.5:9b (default), qwen3:8b-q4_K_M, qwen3.5:4b",
+        description=(
+            "Ollama model name. Options: qwen3.5:9b (default), "
+            "qwen3:8b-q4_K_M (RLM), qwen3.5:4b, qwen3.5:2b, qwen3.5:0.8b"
+        ),
     )
     ollama_timeout: int = Field(
         default=300,

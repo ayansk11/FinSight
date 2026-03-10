@@ -178,6 +178,7 @@ FinSight/
 │   └── e2e/                         # End-to-end tests (requires Ollama)
 │
 ├── scripts/                         # CLI utilities
+│   ├── setup_sample_data.py         # One-command sample data setup
 │   ├── test_e2e.py                  # Manual E2E test runner
 │   ├── generate_tree.py             # Tree generation CLI
 │   └── export_for_iphone.py         # .finsight bundle exporter
@@ -216,6 +217,19 @@ ollama pull qwen3.5:9b
 cp .env.example .env
 # Edit .env to add optional API keys (FRED, Finnhub, PageIndex)
 ```
+
+### Sample Data Setup
+
+```bash
+# Download a sample 10-K from SEC EDGAR and generate a PageIndex tree
+# (requires Ollama running with a model pulled)
+uv run python scripts/setup_sample_data.py
+
+# Or for a different company:
+uv run python scripts/setup_sample_data.py --ticker MSFT
+```
+
+Supported tickers: AAPL, MSFT, GOOGL, AMZN, TSLA, META, NVDA, JPM, V, JNJ.
 
 ### Running the UI
 
@@ -294,12 +308,15 @@ The Router analyzes query intent and selects the appropriate agent combination:
 
 FinSight uses Ollama for local inference and supports any Ollama-compatible model. Configure via the `OLLAMA_MODEL` environment variable:
 
-| Model | Size | Notes |
-|---|---|---|
-| `qwen3.5:9b` | ~6GB | Default — best balance of quality and speed |
-| `qwen3:8b-q4_K_M` | ~5GB | Quantized variant, faster on limited RAM |
-| `qwen3.5:4b` | ~3GB | Lightweight, good for quick queries |
-| Any Ollama model | Varies | Pass any model name via `OLLAMA_MODEL` |
+| Model | Ollama ID | Size | Notes |
+|---|---|---|---|
+| Qwen3.5-9B | `qwen3.5:9b` | ~6GB | Default — best balance of quality and speed |
+| Qwen3-8B (RLM) | `qwen3:8b-q4_K_M` | ~5GB | Optimized for cross-document reasoning |
+| Qwen3.5-4B | `qwen3.5:4b` | ~3GB | Lightweight, good for quick queries |
+| Qwen3.5-2B | `qwen3.5:2b` | ~1.5GB | Minimal memory footprint |
+| Qwen3.5-0.8B | `qwen3.5:0.8b` | ~0.5GB | Ultra-light, fastest inference |
+
+Select your model from the dropdown in the Streamlit sidebar. The default (`OLLAMA_MODEL` env var) can be overridden at runtime.
 
 ### Recursive Language Model (RLM)
 

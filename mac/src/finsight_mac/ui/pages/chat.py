@@ -135,7 +135,7 @@ def _run_query(query: str) -> tuple[str, dict]:
             "rlm_result": {},
             "report": "",
             "executive_summary": "",
-            "model_name": settings.ollama_model,
+            "model_name": st.session_state.get("selected_model", settings.ollama_model),
             "total_duration_seconds": 0.0,
             "error": None,
         }

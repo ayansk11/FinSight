@@ -1,4 +1,4 @@
-"""Tests for new MCP data clients (FMP, Alpha Vantage, Econdb, StockData).
+"""Tests for new MCP data clients (FMP, Alpha Vantage, StockData).
 
 All external API calls are mocked to ensure fast, deterministic tests.
 """
@@ -329,75 +329,6 @@ class TestAlphaVantageClient:
         assert _safe_float("None") is None
         assert _safe_float("-") is None
         assert _safe_float("invalid") is None
-
-
-# ---------------------------------------------------------------------------
-# Econdb Client Tests
-# ---------------------------------------------------------------------------
-
-
-class TestEcondbClient:
-    """Tests for the Econdb global macro data client."""
-
-    def test_format_macro_value(self):
-        """Test the value formatting helper."""
-        from finsight_mac.mcp.econdb_client import _format_macro_value
-
-        assert _format_macro_value("eu_inflation", 2.4) == "2.4%"
-        assert _format_macro_value("us_gdp_growth", 3.1) == "3.1%"
-        assert _format_macro_value("uk_interest_rate", 5.25) == "5.2%"
-        assert _format_macro_value("uk_unemployment", 4.2) == "4.2%"
-        assert _format_macro_value("some_index", 99.5) == "99.50"
-
-    def test_get_series_latest_unknown_name(self):
-        """get_series_latest returns {} for unknown series names."""
-        from finsight_mac.mcp.econdb_client import EcondbClient
-
-        client = EcondbClient()
-        result = asyncio.get_event_loop().run_until_complete(
-            client.get_series_latest("nonexistent_series")
-        )
-        assert result == {}
-
-    def test_global_macro_snapshot_parses_response(self):
-        """get_global_macro_snapshot correctly parses Econdb data."""
-        from finsight_mac.mcp.econdb_client import EcondbClient
-
-        client = EcondbClient()
-
-        mock_response = MagicMock()
-        mock_response.json.return_value = {
-            "data": {
-                "dates": ["2024-01-01", "2024-04-01", "2024-07-01"],
-                "values": [2.8, 3.0, 3.1],
-            },
-            "description": "Real GDP Growth",
-        }
-        mock_response.raise_for_status = MagicMock()
-
-        client._client = AsyncMock()
-        client._client.get = AsyncMock(return_value=mock_response)
-
-        result = asyncio.get_event_loop().run_until_complete(client._get_series("RGDP_US"))
-        assert result is not None
-        assert result["value"] == 3.1
-        assert result["date"] == "2024-07-01"
-
-    def test_empty_series_returns_none(self):
-        """_get_series returns None for empty data."""
-        from finsight_mac.mcp.econdb_client import EcondbClient
-
-        client = EcondbClient()
-
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"data": {"dates": [], "values": []}}
-        mock_response.raise_for_status = MagicMock()
-
-        client._client = AsyncMock()
-        client._client.get = AsyncMock(return_value=mock_response)
-
-        result = asyncio.get_event_loop().run_until_complete(client._get_series("RGDP_US"))
-        assert result is None
 
 
 # ---------------------------------------------------------------------------

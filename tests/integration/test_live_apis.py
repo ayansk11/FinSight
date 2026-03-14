@@ -193,29 +193,6 @@ class TestAlphaVantageLive:
 
 
 # ---------------------------------------------------------------------------
-# Econdb (no API key required)
-# ---------------------------------------------------------------------------
-
-
-class TestEcondbLive:
-    """Live tests for Econdb API.
-
-    Note: Econdb may require authentication. This test gracefully
-    handles empty results if the API returns 401.
-    """
-
-    def test_get_global_macro_snapshot(self):
-        from finsight_mac.mcp.econdb_client import EcondbClient
-
-        client = EcondbClient()
-        result = _run(client.get_global_macro_snapshot())
-        _run(client.close())
-
-        # Econdb may return empty if auth is required
-        assert isinstance(result, dict)
-
-
-# ---------------------------------------------------------------------------
 # StockData
 # ---------------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 """Market data aggregator.
 
 Single entry point that calls FRED, Finnhub, yfinance, Financial Modeling Prep,
-Alpha Vantage, Econdb, and StockData concurrently and returns a unified flat dict
+Alpha Vantage, and StockData concurrently and returns a unified flat dict
 for the Quantitative Analysis Agent.
 """
 
@@ -11,7 +11,6 @@ import asyncio
 import logging
 
 from finsight_mac.mcp.alpha_vantage_client import AlphaVantageClient
-from finsight_mac.mcp.econdb_client import EcondbClient
 from finsight_mac.mcp.finnhub_client import FinnhubClient
 from finsight_mac.mcp.fmp_client import FMPClient
 from finsight_mac.mcp.fred import FredClient
@@ -79,7 +78,6 @@ async def fetch_market_data(ticker: str) -> dict:
     yf_client = YFinanceClient()
     fmp = FMPClient()
     av = AlphaVantageClient()
-    econdb = EcondbClient()
     stockdata = StockDataClient()
 
     try:
@@ -101,7 +99,6 @@ async def fetch_market_data(ticker: str) -> dict:
             av_overview,
             av_earnings,
             av_technicals,
-            global_macro,
             news_sentiment,
         ) = await asyncio.gather(
             fred.get_macro_snapshot(),
@@ -120,7 +117,6 @@ async def fetch_market_data(ticker: str) -> dict:
             av.get_company_overview(ticker),
             av.get_earnings(ticker),
             av.get_technical_indicators(ticker),
-            econdb.get_global_macro_snapshot(),
             stockdata.get_stock_news(ticker),
             return_exceptions=True,
         )
@@ -142,7 +138,6 @@ async def fetch_market_data(ticker: str) -> dict:
         av_overview = av_overview if isinstance(av_overview, dict) else {}
         av_earnings = av_earnings if isinstance(av_earnings, dict) else {}
         av_technicals = av_technicals if isinstance(av_technicals, dict) else {}
-        global_macro = global_macro if isinstance(global_macro, dict) else {}
         news_sentiment = news_sentiment if isinstance(news_sentiment, dict) else {}
 
         result = {}
@@ -363,10 +358,6 @@ async def fetch_market_data(ticker: str) -> dict:
             if av_earnings.get("avg_surprise_pct") is not None:
                 result["avg_earnings_surprise"] = f"{av_earnings['avg_surprise_pct']:+.1f}%"
 
-        # --- Econdb: Global Macro Context ---
-        for key, value in global_macro.items():
-            result[f"global_{key}"] = value
-
         # --- StockData: News Sentiment ---
         if news_sentiment.get("overall_sentiment"):
             result["news_sentiment"] = news_sentiment["overall_sentiment"]
@@ -391,8 +382,6 @@ async def fetch_market_data(ticker: str) -> dict:
             sources.append("FMP")
         if av_overview or av_technicals:
             sources.append("AlphaVantage")
-        if global_macro:
-            sources.append("Econdb")
         if news_sentiment:
             sources.append("StockData")
         result["_data_sources"] = ", ".join(sources) if sources else "none"
@@ -408,7 +397,6 @@ async def fetch_market_data(ticker: str) -> dict:
             yf_client.close(),
             fmp.close(),
             av.close(),
-            econdb.close(),
             stockdata.close(),
             return_exceptions=True,
         )

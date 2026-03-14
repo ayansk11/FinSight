@@ -13,7 +13,7 @@ FinSight is a multi-agent AI system that analyzes SEC filings (10-K, 10-Q, 8-K) 
 - **Docling Document AI** — IBM's AI-powered document conversion with layout analysis, table extraction, and structured Markdown output as the default PDF processor
 - **Local Ollama Inference** — Runs entirely offline using Qwen3.5 via Ollama — no API keys required for core analysis. Supports multiple models (Qwen3.5:9b, Qwen3:8b, Qwen3.5:4b, or any Ollama-compatible model)
 - **Groq Cloud Fallback** — When Ollama times out on large documents (100+ pages), automatically falls back to Groq's fast cloud inference (free tier: 14,400 requests/day)
-- **Market Data Integration** — Real-time financial data from Yahoo Finance, FRED, Finnhub, Financial Modeling Prep, Alpha Vantage, Econdb, and StockData via MCP-style data servers
+- **Market Data Integration** — Real-time financial data from Yahoo Finance, FRED, Finnhub, Financial Modeling Prep, Alpha Vantage, and StockData via MCP-style data servers
 - **MITRE F3 Risk Framework** — Risk classification using a financial threat taxonomy inspired by MITRE ATT&CK
 - **Cross-Document Reasoning (RLM)** — Recursive Language Model integration for multi-filing comparative analysis. When multiple filings are loaded, the router activates RLM synthesis for cross-document reasoning with iterative refinement (up to 15 iterations)
 - **Local Tree Generation** — Heuristic heading detection + LLM refinement (Ollama → Groq fallback) for generating document structure trees from raw PDFs
@@ -62,9 +62,9 @@ FinSight is a multi-agent AI system that analyzes SEC filings (10-K, 10-Q, 8-K) 
     │  (Qwen3.5:9b)  │ │   Trees     │ │  ┌──────┐┌───────┐┌─────┐┌───┐      │
     │  localhost:11434│ │  (JSON)     │ │  │ FRED ││Finnhub││ yFin││FMP│      │
     └────────────────┘ └─────────────┘ │  └──────┘└───────┘└─────┘└───┘      │
-                                        │  ┌────────────┐┌───────┐┌─────────┐ │
-                                        │  │AlphaVantage││Econdb ││StockData│ │
-                                        │  └────────────┘└───────┘└─────────┘ │
+                                        │  ┌────────────┐┌─────────┐          │
+                                        │  │AlphaVantage││StockData│          │
+                                        │  └────────────┘└─────────┘          │
                                         └──────────────────────────────────────┘
 ```
 
@@ -157,13 +157,12 @@ FinSight/
 │       │   ├── pipeline.py          # PDF → PageIndex tree pipeline
 │       │   └── local_tree_generator.py  # Offline tree generation
 │       ├── mcp/                     # Market data servers
-│       │   ├── market_data.py       # Aggregator (all 6 data sources)
+│       │   ├── market_data.py       # Aggregator (all data sources)
 │       │   ├── fred.py              # Federal Reserve data
 │       │   ├── finnhub_client.py    # Market quotes & fundamentals
 │       │   ├── yfinance_client.py   # Yahoo Finance (no API key)
 │       │   ├── fmp_client.py        # Financial Modeling Prep (statements, ratios)
 │       │   ├── alpha_vantage_client.py  # Historical data & technical indicators
-│       │   ├── econdb_client.py     # Global macro data (no API key)
 │       │   └── stockdata_client.py  # Market news & sentiment
 │       ├── llm/
 │       │   ├── ollama_client.py     # Async Ollama wrapper
@@ -286,7 +285,7 @@ uv run python scripts/test_e2e.py --query "What are Apple's main risk factors?"
 | `PAGEINDEX_API_KEY` | No | PageIndex cloud tree generation |
 | `OPENAI_API_KEY` | No | OpenAI for cloud tree generation fallback |
 
-Core analysis works with **zero API keys** — only Ollama is required. Market data APIs are optional and enhance the Quantitative Agent. Econdb provides global macro data with no key needed. **Groq is strongly recommended** for generating trees from large (100+ page) filings — it prevents timeout issues on consumer hardware.
+Core analysis works with **zero API keys** — only Ollama is required. Market data APIs are optional and enhance the Quantitative Agent. **Groq is strongly recommended** for generating trees from large (100+ page) filings — it prevents timeout issues on consumer hardware.
 
 ---
 
@@ -380,7 +379,7 @@ Each risk receives a severity score (0.0–1.0) with supporting evidence and cit
 | Document AI | Docling (IBM) — layout analysis, tables |
 | Document Parsing | PyMuPDF, PageIndex |
 | Cross-Doc Reasoning | RLM (Recursive Language Model) |
-| Market Data | yfinance, FRED API, Finnhub, FMP, Alpha Vantage, Econdb, StockData |
+| Market Data | yfinance, FRED API, Finnhub, FMP, Alpha Vantage, StockData |
 | Data Models | Pydantic v2 |
 | Web UI | Streamlit |
 | Package Manager | uv (workspace) |

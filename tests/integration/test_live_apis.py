@@ -139,7 +139,7 @@ class TestFMPLive:
         _run(client.close())
 
         assert isinstance(result, dict)
-        assert "pe_ratio" in result
+        assert "ev_to_ebitda" in result
 
     def test_get_financial_ratios(self):
         from finsight_mac.mcp.fmp_client import FMPClient

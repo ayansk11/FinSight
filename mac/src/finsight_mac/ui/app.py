@@ -72,12 +72,15 @@ def main() -> None:
     # Route to selected page
     if page == "Chat":
         from finsight_mac.ui.pages.chat import render_chat_page
+
         render_chat_page()
     elif page == "Documents":
         from finsight_mac.ui.pages.documents import render_documents_page
+
         render_documents_page()
     elif page == "Analysis":
         from finsight_mac.ui.pages.analysis import render_analysis_page
+
         render_analysis_page()
 
 
@@ -130,9 +133,7 @@ def _show_model_status() -> None:
 
     # Groq fallback status
     if settings.groq_api_key:
-        st.sidebar.caption(
-            f"Groq fallback: {settings.groq_model.split('/')[-1]}"
-        )
+        st.sidebar.caption(f"Groq fallback: {settings.groq_model.split('/')[-1]}")
     else:
         st.sidebar.caption("Groq fallback: not configured")
 

@@ -17,6 +17,7 @@ from finsight_core.pageindex.text_extractor import (
 # Parser tests
 # ============================================================
 
+
 class TestParser:
     def test_load_tree_from_file(self, sample_tree_path: Path) -> None:
         tree = load_tree(sample_tree_path)
@@ -46,9 +47,7 @@ class TestParser:
         with pytest.raises(FileNotFoundError):
             load_tree("/nonexistent/path.json")
 
-    def test_tree_to_json_roundtrip(
-        self, tmp_path: Path, sample_tree_dict: dict
-    ) -> None:
+    def test_tree_to_json_roundtrip(self, tmp_path: Path, sample_tree_dict: dict) -> None:
         tree = load_tree_from_dict(sample_tree_dict)
         out_path = tmp_path / "output.json"
         tree_to_json(tree, out_path)
@@ -62,6 +61,7 @@ class TestParser:
 # ============================================================
 # Navigator tests
 # ============================================================
+
 
 class TestNavigator:
     @pytest.fixture
@@ -151,6 +151,7 @@ class TestNavigator:
 # Text Extractor tests
 # ============================================================
 
+
 class TestTextExtractor:
     def test_extract_node_text_from_pages(self, page_texts: dict[int, str]) -> None:
         node = TreeNode(
@@ -191,9 +192,12 @@ class TestTextExtractor:
     def test_extract_node_text_embedded_truncation(self) -> None:
         long_text = "x" * 5000
         node = TreeNode(
-            title="Long", node_id="0001",
-            start_index=1, end_index=1,
-            text=long_text, nodes=[],
+            title="Long",
+            node_id="0001",
+            start_index=1,
+            end_index=1,
+            text=long_text,
+            nodes=[],
         )
         text = extract_node_text(node, {}, max_tokens=100)
         assert "[truncated]" in text
@@ -212,8 +216,11 @@ class TestTextExtractor:
 
     def test_extract_empty_page_texts(self) -> None:
         node = TreeNode(
-            title="Empty", node_id="0001",
-            start_index=1, end_index=5, nodes=[],
+            title="Empty",
+            node_id="0001",
+            start_index=1,
+            end_index=5,
+            nodes=[],
         )
         text = extract_node_text(node, {})
         assert text == ""

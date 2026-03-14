@@ -54,15 +54,11 @@ class TestTaxonomy:
 
     def test_all_techniques_have_indicators(self) -> None:
         for tech in ALL_TECHNIQUES:
-            assert len(tech.indicators) > 0, (
-                f"{tech.technique_id} has no indicators"
-            )
+            assert len(tech.indicators) > 0, f"{tech.technique_id} has no indicators"
 
     def test_all_techniques_have_sec_sections(self) -> None:
         for tech in ALL_TECHNIQUES:
-            assert len(tech.sec_sections) > 0, (
-                f"{tech.technique_id} has no SEC sections"
-            )
+            assert len(tech.sec_sections) > 0, f"{tech.technique_id} has no SEC sections"
 
     def test_unique_technique_ids(self) -> None:
         ids = [t.technique_id for t in ALL_TECHNIQUES]

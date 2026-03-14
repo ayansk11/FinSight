@@ -46,9 +46,7 @@ class Finding(BaseModel):
     """A single analytical finding produced by an agent."""
 
     content: str = Field(description="The finding text")
-    agent: str = Field(
-        description="Which agent produced this (doc_intel, quant, risk, synthesis)"
-    )
+    agent: str = Field(description="Which agent produced this (doc_intel, quant, risk, synthesis)")
     confidence: ConfidenceLevel = Field(description="Confidence in this finding")
     citations: list[Citation] = Field(
         default_factory=list, description="Supporting source citations"
@@ -73,15 +71,11 @@ class RiskScore(BaseModel):
     """A risk classification score from the Risk Classification Agent."""
 
     tactic: RiskTactic = Field(description="F3 tactic category")
-    technique_id: str = Field(
-        description="F3-style technique ID (e.g., 'DR-T001')"
-    )
+    technique_id: str = Field(description="F3-style technique ID (e.g., 'DR-T001')")
     technique_name: str = Field(
         description="Human-readable technique name (e.g., 'Material omission in risk factors')"
     )
-    severity: float = Field(
-        ge=0.0, le=1.0, description="Severity score from 0.0 to 1.0"
-    )
+    severity: float = Field(ge=0.0, le=1.0, description="Severity score from 0.0 to 1.0")
     confidence: ConfidenceLevel = Field(description="Confidence in this assessment")
     evidence: str = Field(description="Brief description of the evidence found")
     citations: list[Citation] = Field(
@@ -97,18 +91,12 @@ class AgentOutput(BaseModel):
     """
 
     agent_name: str = Field(description="Agent identifier")
-    findings: list[Finding] = Field(
-        default_factory=list, description="Analytical findings"
-    )
+    findings: list[Finding] = Field(default_factory=list, description="Analytical findings")
     risk_scores: list[RiskScore] = Field(
         default_factory=list, description="Risk classifications (risk agent only)"
     )
-    summary: str = Field(
-        default="", description="Brief summary of this agent's analysis"
-    )
-    error: str | None = Field(
-        default=None, description="Error message if the agent failed"
-    )
+    summary: str = Field(default="", description="Brief summary of this agent's analysis")
+    error: str | None = Field(default=None, description="Error message if the agent failed")
     duration_seconds: float = Field(
         default=0.0, description="Time taken for this agent's execution"
     )

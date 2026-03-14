@@ -24,11 +24,16 @@ _P = "finsight_mac.mcp.market_data"
 def _all_new_patches():
     """Patch FMP, AlphaVantage, Econdb, StockData with empty mocks."""
     fmp = _mock_empty_client(
-        "get_income_statement", "get_balance_sheet", "get_cash_flow",
-        "get_key_metrics", "get_financial_ratios",
+        "get_income_statement",
+        "get_balance_sheet",
+        "get_cash_flow",
+        "get_key_metrics",
+        "get_financial_ratios",
     )
     av = _mock_empty_client(
-        "get_company_overview", "get_earnings", "get_technical_indicators",
+        "get_company_overview",
+        "get_earnings",
+        "get_technical_indicators",
     )
     econdb = _mock_empty_client("get_global_macro_snapshot")
     sd = _mock_empty_client("get_stock_news")
@@ -265,7 +270,9 @@ class TestMarketDataAggregator:
         mock_finnhub.get_recommendation_trends = AsyncMock(
             return_value={
                 "analyst_consensus": "Buy",
-                "analyst_buy": 28, "analyst_hold": 7, "analyst_sell": 2,
+                "analyst_buy": 28,
+                "analyst_hold": 7,
+                "analyst_sell": 2,
             },
         )
         mock_finnhub.close = AsyncMock()
@@ -283,7 +290,10 @@ class TestMarketDataAggregator:
             patch("finsight_mac.mcp.market_data.FredClient", return_value=mock_fred),
             patch("finsight_mac.mcp.market_data.FinnhubClient", return_value=mock_finnhub),
             patch("finsight_mac.mcp.market_data.YFinanceClient", return_value=mock_yf),
-            p_fmp, p_av, p_econdb, p_sd,
+            p_fmp,
+            p_av,
+            p_econdb,
+            p_sd,
         ):
             result = asyncio.get_event_loop().run_until_complete(fetch_market_data("AAPL"))
 
@@ -325,7 +335,10 @@ class TestMarketDataAggregator:
             patch("finsight_mac.mcp.market_data.FredClient", return_value=mock_fred),
             patch("finsight_mac.mcp.market_data.FinnhubClient", return_value=mock_finnhub),
             patch("finsight_mac.mcp.market_data.YFinanceClient", return_value=mock_yf),
-            p_fmp, p_av, p_econdb, p_sd,
+            p_fmp,
+            p_av,
+            p_econdb,
+            p_sd,
         ):
             result = asyncio.get_event_loop().run_until_complete(fetch_market_data("AAPL"))
 

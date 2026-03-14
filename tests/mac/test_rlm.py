@@ -23,6 +23,7 @@ class TestRLMClient:
             )
             # Patch the rlm import to fail
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
@@ -183,9 +184,7 @@ class TestRLMSynthesisNode:
                 return_value=mock_synthesis_output,
             ) as mock_synth,
         ):
-            result = asyncio.get_event_loop().run_until_complete(
-                rlm_synthesis_node(state)
-            )
+            result = asyncio.get_event_loop().run_until_complete(rlm_synthesis_node(state))
 
         assert result["report"] == "Synthesized report"
         assert result["executive_summary"] == "Executive summary"

@@ -58,12 +58,8 @@ def build_hierarchy_prompt(
     """
     heading_list = []
     for c in candidates:
-        level_label = {1: "PART", 2: "ITEM", 3: "SUB"}.get(
-            c.get("level", 3), "SUB"
-        )
-        heading_list.append(
-            f"  - [{level_label}] page {c['page']}: {c['title']}"
-        )
+        level_label = {1: "PART", 2: "ITEM", 3: "SUB"}.get(c.get("level", 3), "SUB")
+        heading_list.append(f"  - [{level_label}] page {c['page']}: {c['title']}")
     headings_text = "\n".join(heading_list)
 
     context_text = ""
@@ -72,10 +68,7 @@ def build_hierarchy_prompt(
         for page_num in sorted(sample_texts.keys())[:20]:
             text = sample_texts[page_num][:150].replace("\n", " ")
             snippets.append(f"  Page {page_num}: {text}")
-        context_text = (
-            "\n\n## Page Previews (first 150 chars)\n"
-            + "\n".join(snippets)
-        )
+        context_text = "\n\n## Page Previews (first 150 chars)\n" + "\n".join(snippets)
 
     return f"""## Document: {doc_name}
 

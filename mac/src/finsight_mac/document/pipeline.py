@@ -94,28 +94,20 @@ class DocumentPipeline:
         while True:
             elapsed = time.time() - start_time
             if elapsed > max_wait:
-                raise TimeoutError(
-                    f"PageIndex tree generation timed out after {max_wait}s"
-                )
+                raise TimeoutError(f"PageIndex tree generation timed out after {max_wait}s")
 
             try:
                 tree_result = client.get_tree(doc_id, node_summary=True)
                 status = tree_result.get("status", "")
 
                 if status == "completed":
-                    logger.info(
-                        f"Tree generation completed in {elapsed:.1f}s"
-                    )
+                    logger.info(f"Tree generation completed in {elapsed:.1f}s")
                     break
                 elif status == "failed":
                     error = tree_result.get("error", "Unknown error")
-                    raise RuntimeError(
-                        f"PageIndex tree generation failed: {error}"
-                    )
+                    raise RuntimeError(f"PageIndex tree generation failed: {error}")
                 else:
-                    logger.debug(
-                        f"Status: {status} ({elapsed:.0f}s elapsed)"
-                    )
+                    logger.debug(f"Status: {status} ({elapsed:.0f}s elapsed)")
             except Exception as e:
                 if "failed" in str(e).lower():
                     raise
@@ -127,6 +119,7 @@ class DocumentPipeline:
         max_page = 0
         try:
             import fitz
+
             doc = fitz.open(str(pdf_path))
             max_page = len(doc)
             doc.close()
@@ -134,9 +127,7 @@ class DocumentPipeline:
             pass
 
         # Step 4: Extract tree structure from API response
-        raw_tree = self._api_response_to_tree_dict(
-            tree_result, doc_name, doc_id, max_page=max_page
-        )
+        raw_tree = self._api_response_to_tree_dict(tree_result, doc_name, doc_id, max_page=max_page)
 
         # Step 5: Check if tree nodes already have text embedded
         has_text = self._tree_has_text(raw_tree["structure"])
@@ -153,16 +144,12 @@ class DocumentPipeline:
                         text = page_data.get("markdown", "")
                         if page_num > 0 and text:
                             page_texts[page_num] = text
-                    logger.info(
-                        f"OCR markdown retrieved for {len(page_texts)} pages"
-                    )
+                    logger.info(f"OCR markdown retrieved for {len(page_texts)} pages")
             except Exception as e:
                 logger.warning(f"Could not retrieve OCR text: {e}")
 
             if page_texts:
-                self._embed_texts_in_tree(
-                    raw_tree["structure"], page_texts
-                )
+                self._embed_texts_in_tree(raw_tree["structure"], page_texts)
 
         # Step 6: Validate and save
         tree = load_tree_from_dict(raw_tree)
@@ -174,9 +161,7 @@ class DocumentPipeline:
         with open(raw_path, "w") as f:
             json.dump(tree_result, f, indent=2)
 
-        logger.info(
-            f"Tree saved to {output_path} ({tree.total_nodes} nodes)"
-        )
+        logger.info(f"Tree saved to {output_path} ({tree.total_nodes} nodes)")
 
         return tree
 
@@ -210,18 +195,11 @@ class DocumentPipeline:
 
         doc_name = doc_name or pdf_path.stem
         generator = LocalTreeGenerator()
-        tree = await generator.generate(
-            pdf_path, doc_name, add_summaries
-        )
+        tree = await generator.generate(pdf_path, doc_name, add_summaries)
 
-        output_path = (
-            self.settings.trees_dir / f"{doc_name}_structure.json"
-        )
+        output_path = self.settings.trees_dir / f"{doc_name}_structure.json"
         tree_to_json(tree, output_path)
-        logger.info(
-            f"Local tree saved to {output_path} "
-            f"({tree.total_nodes} nodes)"
-        )
+        logger.info(f"Local tree saved to {output_path} ({tree.total_nodes} nodes)")
         return tree
 
     def generate_tree(
@@ -265,25 +243,14 @@ class DocumentPipeline:
 
             pdf_path_obj = Path(pdf_path)
             if not pdf_path_obj.exists():
-                raise FileNotFoundError(
-                    f"PDF not found: {pdf_path_obj}"
-                )
+                raise FileNotFoundError(f"PDF not found: {pdf_path_obj}")
             name = doc_name or pdf_path_obj.stem
 
             generator = LocalTreeGenerator()
-            tree = asyncio.run(
-                generator.generate(
-                    pdf_path_obj, name, add_summaries
-                )
-            )
-            output_path = (
-                self.settings.trees_dir / f"{name}_structure.json"
-            )
+            tree = asyncio.run(generator.generate(pdf_path_obj, name, add_summaries))
+            output_path = self.settings.trees_dir / f"{name}_structure.json"
             tree_to_json(tree, output_path)
-            logger.info(
-                f"Local tree saved to {output_path} "
-                f"({tree.total_nodes} nodes)"
-            )
+            logger.info(f"Local tree saved to {output_path} ({tree.total_nodes} nodes)")
             return tree
         except Exception as e:
             logger.warning(f"Local Ollama tree generation failed: {e}")
@@ -305,10 +272,7 @@ class DocumentPipeline:
         doc_name = doc_name or pdf_path.stem
         pi_model = model or self.settings.pageindex_model
 
-        logger.info(
-            f"Generating PageIndex tree for {doc_name} "
-            f"using {pi_model}..."
-        )
+        logger.info(f"Generating PageIndex tree for {doc_name} using {pi_model}...")
 
         raw_tree = page_index(
             str(pdf_path),
@@ -321,13 +285,9 @@ class DocumentPipeline:
 
         tree = load_tree_from_dict(raw_tree)
 
-        output_path = (
-            self.settings.trees_dir / f"{doc_name}_structure.json"
-        )
+        output_path = self.settings.trees_dir / f"{doc_name}_structure.json"
         tree_to_json(tree, output_path)
-        logger.info(
-            f"Tree saved to {output_path} ({tree.total_nodes} nodes)"
-        )
+        logger.info(f"Tree saved to {output_path} ({tree.total_nodes} nodes)")
 
         return tree
 
@@ -350,11 +310,7 @@ class DocumentPipeline:
         if isinstance(result, list):
             api_nodes = result
         elif isinstance(result, dict):
-            api_nodes = (
-                result.get("structure")
-                or result.get("tree")
-                or result.get("nodes", [])
-            )
+            api_nodes = result.get("structure") or result.get("tree") or result.get("nodes", [])
         else:
             api_nodes = []
 
@@ -372,9 +328,7 @@ class DocumentPipeline:
             "structure": normalized,
         }
 
-    def _normalize_nodes(
-        self, nodes: list, max_page: int = 0
-    ) -> list:
+    def _normalize_nodes(self, nodes: list, max_page: int = 0) -> list:
         """Normalize API node format to our internal format.
 
         Maps page_index → start_index and computes end_index from
@@ -397,15 +351,11 @@ class DocumentPipeline:
 
             # If node has children, end_index is last child's end
             # (will be computed recursively)
-            normalized_children = self._normalize_nodes(
-                children, max_page=end_idx
-            )
+            normalized_children = self._normalize_nodes(children, max_page=end_idx)
 
             # Refine end_index from children if available
             if normalized_children:
-                child_max = max(
-                    c.get("end_index", 0) for c in normalized_children
-                )
+                child_max = max(c.get("end_index", 0) for c in normalized_children)
                 if child_max > 0:
                     end_idx = max(end_idx, child_max)
 
@@ -414,9 +364,7 @@ class DocumentPipeline:
                 "node_id": node.get("node_id", ""),
                 "start_index": node.get("start_index", page_idx),
                 "end_index": node.get("end_index", end_idx),
-                "summary": node.get(
-                    "summary", node.get("prefix_summary", "")
-                ),
+                "summary": node.get("summary", node.get("prefix_summary", "")),
                 "text": node.get("text"),
                 "nodes": normalized_children,
             }
@@ -531,33 +479,24 @@ class DocumentPipeline:
 
                 if is_docling_available():
                     cache_dir = self.settings.data_dir / "docling_cache"
-                    cache_path = (
-                        cache_dir / f"{pdf_path.stem}_docling.json"
-                    )
+                    cache_path = cache_dir / f"{pdf_path.stem}_docling.json"
                     cached = DoclingResult.load_cache(cache_path)
 
                     if cached:
-                        logger.info(
-                            f"Using cached Docling result for "
-                            f"{pdf_path.stem}"
-                        )
+                        logger.info(f"Using cached Docling result for {pdf_path.stem}")
                         return cached.page_texts
 
-                    processor = DoclingProcessor(
-                        enable_ocr=False, table_mode="fast"
-                    )
+                    processor = DoclingProcessor(enable_ocr=False, table_mode="fast")
                     result = processor.process_pdf(pdf_path)
                     result.save_cache(cache_dir)
                     return result.page_texts
             except Exception as e:
-                logger.warning(
-                    f"Docling processing failed, "
-                    f"falling back to PyMuPDF: {e}"
-                )
+                logger.warning(f"Docling processing failed, falling back to PyMuPDF: {e}")
 
         from finsight_core.pageindex.text_extractor import (
             extract_pages_from_pdf,
         )
+
         return extract_pages_from_pdf(str(pdf_path))
 
     def extract_page_markdowns(
@@ -586,23 +525,17 @@ class DocumentPipeline:
                 return None
 
             cache_dir = self.settings.data_dir / "docling_cache"
-            cache_path = (
-                cache_dir / f"{Path(pdf_path).stem}_docling.json"
-            )
+            cache_path = cache_dir / f"{Path(pdf_path).stem}_docling.json"
             cached = DoclingResult.load_cache(cache_path)
 
             if cached:
                 return cached.page_markdowns
 
-            processor = DoclingProcessor(
-                enable_ocr=False, table_mode="fast"
-            )
+            processor = DoclingProcessor(enable_ocr=False, table_mode="fast")
             result = processor.process_pdf(pdf_path)
             result.save_cache(cache_dir)
             return result.page_markdowns
 
         except Exception as e:
-            logger.warning(
-                f"Docling Markdown extraction failed: {e}"
-            )
+            logger.warning(f"Docling Markdown extraction failed: {e}")
             return None

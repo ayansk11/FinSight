@@ -30,6 +30,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 markers = [
     "e2e: end-to-end tests requiring Ollama (deselect with '-m not e2e')",
+    "integration: live API integration tests (skipped when keys are missing)",
 ]
 
 [tool.ruff]

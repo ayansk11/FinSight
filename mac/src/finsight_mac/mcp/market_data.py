@@ -264,8 +264,10 @@ async def fetch_market_data(ticker: str) -> dict:
         if yf_financials.get("income_period"):
             result["financial_period"] = yf_financials["income_period"]
         stmt_keys = [
-            "income_total_revenue", "income_net_income",
-            "income_operating_income", "income_ebitda",
+            "income_total_revenue",
+            "income_net_income",
+            "income_operating_income",
+            "income_ebitda",
         ]
         for key in stmt_keys:
             if yf_financials.get(key) is not None:
@@ -279,9 +281,7 @@ async def fetch_market_data(ticker: str) -> dict:
         # --- FMP: Structured Financial Statements ---
         if fmp_income.get("revenue") is not None:
             result["fmp_revenue"] = _fmt_large_number(fmp_income["revenue"])
-            result["fmp_net_income"] = _fmt_large_number(
-                fmp_income.get("net_income")
-            )
+            result["fmp_net_income"] = _fmt_large_number(fmp_income.get("net_income"))
             result["fmp_ebitda"] = _fmt_large_number(fmp_income.get("ebitda"))
             if fmp_income.get("eps_diluted") is not None:
                 result["fmp_eps"] = f"${fmp_income['eps_diluted']:.2f}"
@@ -318,9 +318,7 @@ async def fetch_market_data(ticker: str) -> dict:
 
         # FMP ratios: interest coverage
         if fmp_ratios.get("interest_coverage") is not None:
-            result["interest_coverage"] = (
-                f"{fmp_ratios['interest_coverage']:.1f}x"
-            )
+            result["interest_coverage"] = f"{fmp_ratios['interest_coverage']:.1f}x"
 
         # FMP detailed ratios (fill gaps)
         if fmp_ratios.get("quick_ratio") is not None:
@@ -374,9 +372,7 @@ async def fetch_market_data(ticker: str) -> dict:
             result["news_sentiment"] = news_sentiment["overall_sentiment"]
             result["news_article_count"] = str(news_sentiment.get("article_count", 0))
             if news_sentiment.get("avg_sentiment") is not None:
-                result["news_sentiment_score"] = (
-                    f"{news_sentiment['avg_sentiment']:+.2f}"
-                )
+                result["news_sentiment_score"] = f"{news_sentiment['avg_sentiment']:+.2f}"
             # Include recent headlines for context
             articles = news_sentiment.get("articles", [])
             headlines = [a["title"] for a in articles[:3] if a.get("title")]
@@ -402,9 +398,7 @@ async def fetch_market_data(ticker: str) -> dict:
         result["_data_sources"] = ", ".join(sources) if sources else "none"
 
         src = result.get("_data_sources", "none")
-        logger.info(
-            f"[MarketData] Fetched {len(result)} data points for {ticker} from {src}"
-        )
+        logger.info(f"[MarketData] Fetched {len(result)} data points for {ticker} from {src}")
         return result
 
     finally:

@@ -18,9 +18,7 @@ def render_risk_table(risk_scores: list[dict[str, Any]]) -> None:
         return
 
     # Sort by severity descending
-    sorted_scores = sorted(
-        risk_scores, key=lambda r: r.get("severity", 0), reverse=True
-    )
+    sorted_scores = sorted(risk_scores, key=lambda r: r.get("severity", 0), reverse=True)
 
     for rs in sorted_scores:
         severity = rs.get("severity", 0)
@@ -67,8 +65,7 @@ def render_risk_summary(risk_scores: list[dict[str, Any]]) -> None:
         return
 
     tactic_counts = Counter(
-        rs.get("tactic", "unknown").replace("_", " ").title()
-        for rs in risk_scores
+        rs.get("tactic", "unknown").replace("_", " ").title() for rs in risk_scores
     )
 
     avg_severity = sum(rs.get("severity", 0) for rs in risk_scores) / len(risk_scores)
@@ -82,7 +79,4 @@ def render_risk_summary(risk_scores: list[dict[str, Any]]) -> None:
     with col3:
         st.metric("Max Severity", f"{max_severity:.0%}")
 
-    st.caption(
-        "By tactic: "
-        + ", ".join(f"{t} ({c})" for t, c in tactic_counts.most_common())
-    )
+    st.caption("By tactic: " + ", ".join(f"{t} ({c})" for t, c in tactic_counts.most_common()))

@@ -34,9 +34,7 @@ class StockDataClient:
         self._api_key = settings.stockdata_api_key
         self._client = httpx.AsyncClient(timeout=15) if self._api_key else None
 
-    async def _get(
-        self, endpoint: str, params: dict | None = None
-    ) -> dict | None:
+    async def _get(self, endpoint: str, params: dict | None = None) -> dict | None:
         """Make an authenticated GET request to StockData."""
         if not self._client or not self._api_key:
             return None
@@ -46,9 +44,7 @@ class StockDataClient:
             full_params.update(params)
 
         try:
-            response = await self._client.get(
-                f"{BASE_URL}/{endpoint}", params=full_params
-            )
+            response = await self._client.get(f"{BASE_URL}/{endpoint}", params=full_params)
             response.raise_for_status()
             return response.json()
         except Exception as e:

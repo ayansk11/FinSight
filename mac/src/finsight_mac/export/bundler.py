@@ -96,6 +96,7 @@ class BundleExporter:
     def _strip_node_text(tree: PageIndexTree) -> PageIndexTree:
         """Create a copy of the tree with node text removed (for smaller bundles)."""
         import json
+
         tree_dict = json.loads(tree.model_dump_json())
 
         def strip_text(nodes: list) -> list:
@@ -109,4 +110,5 @@ class BundleExporter:
             strip_text(tree_dict["structure"])
 
         from finsight_core.pageindex.parser import load_tree_from_dict
+
         return load_tree_from_dict(tree_dict)

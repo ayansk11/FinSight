@@ -82,9 +82,7 @@ async def run_synthesis_agent(
             metadata={
                 "report_sections": _count_sections(report),
                 "source_agent_count": sum(
-                    1
-                    for o in [doc_intel_output, quant_output, risk_output]
-                    if o and o.succeeded
+                    1 for o in [doc_intel_output, quant_output, risk_output] if o and o.succeeded
                 ),
             },
         )
@@ -107,9 +105,7 @@ async def run_synthesis_agent(
         )
 
 
-def _format_agent_findings(
-    output: AgentOutput | None, agent_label: str
-) -> str:
+def _format_agent_findings(output: AgentOutput | None, agent_label: str) -> str:
     """Format an agent's output for synthesis input."""
     if output is None:
         return f"No {agent_label} analysis available."

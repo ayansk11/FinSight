@@ -122,9 +122,7 @@ def compute_liquidity(
     """Compute liquidity ratios."""
     return {
         "current_ratio": safe_divide(current_assets, current_liabilities),
-        "quick_ratio": safe_divide(
-            current_assets - inventory, current_liabilities
-        ),
+        "quick_ratio": safe_divide(current_assets - inventory, current_liabilities),
         "cash_ratio": safe_divide(cash, current_liabilities),
     }
 

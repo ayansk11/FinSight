@@ -89,10 +89,7 @@ def download_filing(
     """Download a filing document from SEC EDGAR."""
     acc_no_dashes = accession.replace("-", "")
     cik_num = cik.lstrip("0")
-    url = (
-        f"https://www.sec.gov/Archives/edgar/data/"
-        f"{cik_num}/{acc_no_dashes}/{document}"
-    )
+    url = f"https://www.sec.gov/Archives/edgar/data/{cik_num}/{acc_no_dashes}/{document}"
     logger.info(f"Downloading {document} from SEC EDGAR...")
     logger.info(f"  URL: {url}")
 
@@ -106,9 +103,7 @@ def download_filing(
 def check_ollama(model: str) -> bool:
     """Check if Ollama is running and the model is available."""
     try:
-        data = json.loads(
-            _sec_request("http://localhost:11434/api/tags").decode()
-        )
+        data = json.loads(_sec_request("http://localhost:11434/api/tags").decode())
     except Exception:
         return False
 
@@ -248,7 +243,7 @@ Examples:
     print()
     print("    3. In the UI:")
     print("       - Go to Documents tab → Load the tree")
-    print(f"       - Go to Chat tab → Ask: \"What are {ticker}'s main risk factors?\"")
+    print(f'       - Go to Chat tab → Ask: "What are {ticker}\'s main risk factors?"')
     print("       - Go to Analysis tab → View findings and risk scores")
     print()
     print("    Or run from CLI:")

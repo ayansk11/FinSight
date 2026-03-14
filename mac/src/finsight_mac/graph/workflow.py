@@ -64,9 +64,7 @@ async def doc_intel_node(state: FinSightState) -> dict:
         tree = load_tree_from_dict(tree_data)
         pdf_path = filings[i].get("pdf_path") if i < len(filings) else None
         filing_name = (
-            filings[i].get("display_name", tree.doc_name)
-            if i < len(filings)
-            else tree.doc_name
+            filings[i].get("display_name", tree.doc_name) if i < len(filings) else tree.doc_name
         )
 
         page_texts = None
@@ -206,11 +204,7 @@ async def rlm_synthesis_node(state: FinSightState) -> dict:
     tree_outlines: dict[str, str] = {}
     for i, tree_data in enumerate(trees_data):
         tree = load_tree_from_dict(tree_data)
-        name = (
-            filings[i].get("display_name", tree.doc_name)
-            if i < len(filings)
-            else tree.doc_name
-        )
+        name = filings[i].get("display_name", tree.doc_name) if i < len(filings) else tree.doc_name
         filing_names.append(name)
         tree_outlines[name] = tree.get_tree_outline(max_depth=4)
 
@@ -224,15 +218,9 @@ async def rlm_synthesis_node(state: FinSightState) -> dict:
     )
 
     # Feed RLM analysis + upstream findings into synthesis
-    doc_output = _find_agent_output(
-        summaries, "doc_intel", state.get("findings", [])
-    )
-    quant_output = _find_agent_output(
-        summaries, "quant", state.get("findings", [])
-    )
-    risk_output = _find_agent_output(
-        summaries, "risk", state.get("findings", [])
-    )
+    doc_output = _find_agent_output(summaries, "doc_intel", state.get("findings", []))
+    quant_output = _find_agent_output(summaries, "quant", state.get("findings", []))
+    risk_output = _find_agent_output(summaries, "risk", state.get("findings", []))
 
     output = await run_synthesis_agent(
         query=query,

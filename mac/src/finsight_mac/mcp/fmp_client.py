@@ -35,9 +35,7 @@ class FMPClient:
         self._api_key = settings.fmp_api_key
         self._client = httpx.AsyncClient(timeout=15) if self._api_key else None
 
-    async def _get(
-        self, endpoint: str, params: dict | None = None
-    ) -> list | dict | None:
+    async def _get(self, endpoint: str, params: dict | None = None) -> list | dict | None:
         """Make an authenticated GET request to FMP."""
         if not self._client or not self._api_key:
             return None
@@ -47,9 +45,7 @@ class FMPClient:
             full_params.update(params)
 
         try:
-            response = await self._client.get(
-                f"{BASE_URL}/{endpoint}", params=full_params
-            )
+            response = await self._client.get(f"{BASE_URL}/{endpoint}", params=full_params)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -63,9 +59,7 @@ class FMPClient:
             Dict with revenue, gross_profit, operating_income, net_income,
             ebitda, eps.
         """
-        data = await self._get(
-            "income-statement", {"symbol": ticker, "limit": str(limit)}
-        )
+        data = await self._get("income-statement", {"symbol": ticker, "limit": str(limit)})
         if not data or not isinstance(data, list) or len(data) == 0:
             return {}
 
@@ -92,9 +86,7 @@ class FMPClient:
         Returns:
             Dict with total_assets, total_liabilities, equity, cash, debt, etc.
         """
-        data = await self._get(
-            "balance-sheet-statement", {"symbol": ticker, "limit": str(limit)}
-        )
+        data = await self._get("balance-sheet-statement", {"symbol": ticker, "limit": str(limit)})
         if not data or not isinstance(data, list) or len(data) == 0:
             return {}
 
@@ -125,9 +117,7 @@ class FMPClient:
             Dict with operating_cf, investing_cf, financing_cf, capex,
             free_cash_flow, etc.
         """
-        data = await self._get(
-            "cash-flow-statement", {"symbol": ticker, "limit": str(limit)}
-        )
+        data = await self._get("cash-flow-statement", {"symbol": ticker, "limit": str(limit)})
         if not data or not isinstance(data, list) or len(data) == 0:
             return {}
 
@@ -135,12 +125,8 @@ class FMPClient:
         return {
             "period": stmt.get("date", ""),
             "operating_cash_flow": stmt.get("operatingCashFlow"),
-            "investing_cash_flow": stmt.get(
-                "netCashProvidedByInvestingActivities"
-            ),
-            "financing_cash_flow": stmt.get(
-                "netCashProvidedByFinancingActivities"
-            ),
+            "investing_cash_flow": stmt.get("netCashProvidedByInvestingActivities"),
+            "financing_cash_flow": stmt.get("netCashProvidedByFinancingActivities"),
             "capital_expenditure": stmt.get("capitalExpenditure"),
             "free_cash_flow": stmt.get("freeCashFlow"),
             "dividends_paid": stmt.get("commonDividendsPaid"),
@@ -155,9 +141,7 @@ class FMPClient:
         Returns:
             Dict with EV/EBITDA, ROE, ROIC, debt ratios, etc.
         """
-        data = await self._get(
-            "key-metrics", {"symbol": ticker, "limit": str(limit)}
-        )
+        data = await self._get("key-metrics", {"symbol": ticker, "limit": str(limit)})
         if not data or not isinstance(data, list) or len(data) == 0:
             return {}
 
@@ -188,9 +172,7 @@ class FMPClient:
         Returns:
             Dict with profitability, liquidity, leverage, and efficiency ratios.
         """
-        data = await self._get(
-            "ratios", {"symbol": ticker, "limit": str(limit)}
-        )
+        data = await self._get("ratios", {"symbol": ticker, "limit": str(limit)})
         if not data or not isinstance(data, list) or len(data) == 0:
             return {}
 

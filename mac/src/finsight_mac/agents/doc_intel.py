@@ -78,9 +78,7 @@ async def run_doc_intel_agent(
         logger.info(f"[DocIntel] Selected {len(selected_ids)} nodes: {selected_ids}")
         logger.info(f"[DocIntel] Reasoning: {reasoning}")
     except (json.JSONDecodeError, Exception) as e:
-        logger.warning(
-            f"[DocIntel] Tree navigation failed: {e}. Falling back to keyword search."
-        )
+        logger.warning(f"[DocIntel] Tree navigation failed: {e}. Falling back to keyword search.")
         keywords = query.lower().split()[:5]
         results = navigator.search_by_keywords(keywords, max_results=3)
         selected_ids = [r.node.node_id for r in results]
@@ -88,9 +86,7 @@ async def run_doc_intel_agent(
     # Step 1b: Validate LLM selection with keyword re-ranking
     if selected_ids:
         query_keywords = [w for w in query.lower().split() if len(w) > 3][:6]
-        keyword_results = navigator.search_by_keywords(
-            query_keywords, max_results=5
-        )
+        keyword_results = navigator.search_by_keywords(query_keywords, max_results=5)
         keyword_ids = {r.node.node_id for r in keyword_results}
 
         overlap = set(selected_ids) & keyword_ids
@@ -98,9 +94,7 @@ async def run_doc_intel_agent(
             # LLM picked nodes with zero keyword overlap — merge top results
             top_kw_ids = [r.node.node_id for r in keyword_results[:2]]
             selected_ids = top_kw_ids + selected_ids[:3]
-            logger.info(
-                f"[DocIntel] Re-ranked: merged keyword results {top_kw_ids}"
-            )
+            logger.info(f"[DocIntel] Re-ranked: merged keyword results {top_kw_ids}")
 
     if not selected_ids:
         return AgentOutput(
@@ -141,9 +135,7 @@ async def run_doc_intel_agent(
         )
 
         try:
-            analysis = await client.achat_json(
-                analysis_prompt, system_message=SYSTEM_PROMPT
-            )
+            analysis = await client.achat_json(analysis_prompt, system_message=SYSTEM_PROMPT)
 
             # Convert to Finding models
             for finding_data in analysis.get("findings", []):

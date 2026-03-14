@@ -27,4 +27,22 @@ jobs:
       - run: uv python install 3.11
       - run: uv sync --all-packages
         working-directory: .
-      - run: uv run pytest tests/ -v --tb=short --ignore=tests/e2e
+      - run: uv run pytest tests/ -v --tb=short --ignore=tests/e2e --ignore=tests/integration
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    env:
+      FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+      ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
+      STOCKDATA_API_KEY: ${{ secrets.STOCKDATA_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.11
+      - run: uv sync --all-packages
+        working-directory: .
+      - run: uv run pytest tests/integration/ -v --tb=short

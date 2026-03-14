@@ -32,9 +32,7 @@ class TestHeadingExtractionRealPDF:
         gen = LocalTreeGenerator(llm=None)
         candidates = gen._extract_heading_candidates(page_texts)
 
-        assert len(candidates) >= 5, (
-            f"Expected at least 5 headings, got {len(candidates)}"
-        )
+        assert len(candidates) >= 5, f"Expected at least 5 headings, got {len(candidates)}"
 
         titles = [c["title"] for c in candidates]
 
@@ -74,9 +72,7 @@ class TestLocalTreeGenLive:
         )
 
         assert tree.doc_name == "AAPL_10K_2024"
-        assert tree.total_nodes >= 5, (
-            f"Should have at least 5 nodes, got {tree.total_nodes}"
-        )
+        assert tree.total_nodes >= 5, f"Should have at least 5 nodes, got {tree.total_nodes}"
 
         # All nodes should have valid IDs
         all_nodes = tree.get_all_nodes()

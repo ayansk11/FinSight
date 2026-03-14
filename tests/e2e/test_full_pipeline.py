@@ -19,9 +19,7 @@ class TestFullPipeline:
     """Full workflow tests with real Ollama inference."""
 
     def _run(self, workflow, state):
-        return asyncio.get_event_loop().run_until_complete(
-            workflow.ainvoke(state)
-        )
+        return asyncio.get_event_loop().run_until_complete(workflow.ainvoke(state))
 
     def test_risk_query(self, workflow, base_state):
         """Risk-focused query routes correctly and produces findings."""
@@ -34,9 +32,7 @@ class TestFullPipeline:
         assert len(result["risk_scores"]) > 0
 
         # Risk agent should have produced findings
-        risk_findings = [
-            f for f in result["findings"] if f.get("agent") == "risk"
-        ]
+        risk_findings = [f for f in result["findings"] if f.get("agent") == "risk"]
         assert len(risk_findings) > 0
 
     def test_quant_query(self, workflow, base_state):
@@ -54,9 +50,7 @@ class TestFullPipeline:
         result = self._run(workflow, base_state)
 
         assert len(result["findings"]) > 0
-        doc_findings = [
-            f for f in result["findings"] if f.get("agent") == "doc_intel"
-        ]
+        doc_findings = [f for f in result["findings"] if f.get("agent") == "doc_intel"]
         assert len(doc_findings) > 0
 
     def test_pipeline_produces_report(self, workflow, base_state):

@@ -170,9 +170,7 @@ class GroqClient:
         return self._parse_json_response(raw)
 
     @staticmethod
-    def _build_messages(
-        system_message: str | None, user_message: str
-    ) -> list[dict[str, str]]:
+    def _build_messages(system_message: str | None, user_message: str) -> list[dict[str, str]]:
         """Build the messages list for the API call."""
         messages = []
         if system_message:
@@ -196,7 +194,7 @@ class GroqClient:
         if "<think>" in text:
             think_end = text.rfind("</think>")
             if think_end >= 0:
-                text = text[think_end + len("</think>"):].strip()
+                text = text[think_end + len("</think>") :].strip()
 
         # Remove markdown code block wrapper
         if text.startswith("```"):

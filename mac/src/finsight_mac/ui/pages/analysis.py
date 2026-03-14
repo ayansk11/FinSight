@@ -48,9 +48,7 @@ def render_analysis_page() -> None:
     st.divider()
 
     # Tabs
-    tabs = st.tabs(
-        ["Executive Summary", "Findings", "Risk Scores", "Full Report", "Export"]
-    )
+    tabs = st.tabs(["Executive Summary", "Findings", "Risk Scores", "Full Report", "Export"])
 
     # --- Executive Summary ---
     with tabs[0]:
@@ -86,9 +84,7 @@ def render_analysis_page() -> None:
             st.divider()
             render_risk_table(risk_scores)
         else:
-            st.caption(
-                "No risk scores. Run a risk-focused query to generate them."
-            )
+            st.caption("No risk scores. Run a risk-focused query to generate them.")
 
     # --- Full Report ---
     with tabs[3]:
@@ -106,9 +102,7 @@ def render_analysis_page() -> None:
 def _render_export(result: dict) -> None:
     """Render export controls for .finsight bundles."""
     st.subheader("Export to .finsight Bundle")
-    st.caption(
-        "Generate a `.finsight` JSON bundle for the iPhone companion app."
-    )
+    st.caption("Generate a `.finsight` JSON bundle for the iPhone companion app.")
 
     trees = st.session_state.get("loaded_trees", {})
     if not trees:
@@ -144,14 +138,8 @@ def _render_export(result: dict) -> None:
                 filing_date=date.today(),
             )
 
-            findings_objs = [
-                Finding.model_validate(f)
-                for f in result.get("findings", [])
-            ]
-            risk_objs = [
-                RiskScore.model_validate(r)
-                for r in result.get("risk_scores", [])
-            ]
+            findings_objs = [Finding.model_validate(f) for f in result.get("findings", [])]
+            risk_objs = [RiskScore.model_validate(r) for r in result.get("risk_scores", [])]
 
             bundle = ExportBundle(
                 model_used=result.get("model_name", "unknown"),

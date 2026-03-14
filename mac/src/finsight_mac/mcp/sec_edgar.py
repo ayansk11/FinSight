@@ -66,9 +66,7 @@ class EdgarClient:
 
         try:
             # Try the ticker-to-CIK lookup via company tickers file
-            response = await self._client.get(
-                "https://www.sec.gov/files/company_tickers.json"
-            )
+            response = await self._client.get("https://www.sec.gov/files/company_tickers.json")
             response.raise_for_status()
             data = response.json()
 
@@ -121,15 +119,17 @@ class EdgarClient:
             results = []
             for i, form in enumerate(forms):
                 if form == filing_type and len(results) < limit:
-                    results.append({
-                        "ticker": ticker,
-                        "company_name": data.get("name", ticker),
-                        "filing_type": form,
-                        "filing_date": dates[i] if i < len(dates) else "",
-                        "accession_number": accessions[i] if i < len(accessions) else "",
-                        "primary_document": primary_docs[i] if i < len(primary_docs) else "",
-                        "cik": cik,
-                    })
+                    results.append(
+                        {
+                            "ticker": ticker,
+                            "company_name": data.get("name", ticker),
+                            "filing_type": form,
+                            "filing_date": dates[i] if i < len(dates) else "",
+                            "accession_number": accessions[i] if i < len(accessions) else "",
+                            "primary_document": primary_docs[i] if i < len(primary_docs) else "",
+                            "cik": cik,
+                        }
+                    )
 
             logger.info(f"Found {len(results)} {filing_type} filings for {ticker}")
             return results
@@ -195,4 +195,5 @@ class EdgarClient:
 async def _async_sleep(seconds: float) -> None:
     """Async sleep helper."""
     import asyncio
+
     await asyncio.sleep(seconds)

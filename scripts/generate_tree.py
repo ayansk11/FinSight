@@ -65,7 +65,8 @@ Examples:
         help="Show info about a specific tree by document name.",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose logging.",
     )
@@ -160,6 +161,7 @@ Examples:
         print(f"Error generating tree: {e}")
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         sys.exit(1)
 

@@ -29,20 +29,14 @@ logger = logging.getLogger(__name__)
 # --- SEC filing heading patterns ---
 
 # Level 1: PART headings
-_RE_PART = re.compile(
-    r"^\s*PART\s+(I{1,3}V?|IV|[1-4])\b", re.IGNORECASE
-)
+_RE_PART = re.compile(r"^\s*PART\s+(I{1,3}V?|IV|[1-4])\b", re.IGNORECASE)
 
 # Level 2: Item headings
-_RE_ITEM = re.compile(
-    r"^\s*Item\s+\d+[A-Z]?\.?\s", re.IGNORECASE
-)
+_RE_ITEM = re.compile(r"^\s*Item\s+\d+[A-Z]?\.?\s", re.IGNORECASE)
 
 # Level 2: Other top-level sections
 _RE_SIGNATURES = re.compile(r"^\s*SIGNATURES\s*$", re.IGNORECASE)
-_RE_EXHIBITS = re.compile(
-    r"^\s*EXHIBIT\s+(INDEX|LIST)", re.IGNORECASE
-)
+_RE_EXHIBITS = re.compile(r"^\s*EXHIBIT\s+(INDEX|LIST)", re.IGNORECASE)
 
 # Skip list: lines that look like headings but aren't sections
 _SKIP_PATTERNS = [
@@ -77,6 +71,7 @@ class LocalTreeGenerator:
         """Lazy-init OllamaClient."""
         if self._llm is None:
             from finsight_mac.llm.ollama_client import OllamaClient
+
             self._llm = OllamaClient()
         return self._llm
 
@@ -84,6 +79,7 @@ class LocalTreeGenerator:
         """Lazy-init Groq fallback client (returns None if not configured)."""
         if self._fallback_llm is None:
             from finsight_mac.llm.groq_client import GroqClient
+
             if GroqClient.is_available():
                 try:
                     self._fallback_llm = GroqClient()
@@ -118,29 +114,27 @@ class LocalTreeGenerator:
             page_texts = self._extract_page_texts(pdf_path)
 
         max_page = max(page_texts.keys()) if page_texts else 0
-        logger.info(
-            f"[LocalTreeGen] Extracted text from {len(page_texts)} pages"
-        )
+        logger.info(f"[LocalTreeGen] Extracted text from {len(page_texts)} pages")
 
         # Step 2: Heuristic heading detection
         candidates = self._extract_heading_candidates(page_texts)
-        logger.info(
-            f"[LocalTreeGen] Found {len(candidates)} heading candidates"
-        )
+        logger.info(f"[LocalTreeGen] Found {len(candidates)} heading candidates")
 
         if not candidates:
             # Fallback: create a single root node spanning all pages
             tree_dict = {
                 "doc_name": doc_name,
                 "doc_description": f"Document: {doc_name}",
-                "structure": [{
-                    "title": doc_name,
-                    "node_id": "0000",
-                    "start_index": 1,
-                    "end_index": max_page or 1,
-                    "summary": None,
-                    "nodes": [],
-                }],
+                "structure": [
+                    {
+                        "title": doc_name,
+                        "node_id": "0000",
+                        "start_index": 1,
+                        "end_index": max_page or 1,
+                        "summary": None,
+                        "nodes": [],
+                    }
+                ],
             }
             return load_tree_from_dict(tree_dict)
 
@@ -150,40 +144,37 @@ class LocalTreeGenerator:
         # Try Ollama first
         try:
             tree_dict = await self._build_hierarchy_with_llm(
-                self._get_llm(), "Ollama",
-                candidates, doc_name, page_texts, max_page,
+                self._get_llm(),
+                "Ollama",
+                candidates,
+                doc_name,
+                page_texts,
+                max_page,
             )
         except Exception as e:
-            logger.warning(
-                f"[LocalTreeGen] Ollama hierarchy failed: {e}"
-            )
+            logger.warning(f"[LocalTreeGen] Ollama hierarchy failed: {e}")
 
         # Try Groq fallback if Ollama failed
         if tree_dict is None:
             fallback = self._get_fallback_llm()
             if fallback is not None:
                 try:
-                    logger.info(
-                        "[LocalTreeGen] Falling back to Groq cloud..."
-                    )
+                    logger.info("[LocalTreeGen] Falling back to Groq cloud...")
                     tree_dict = await self._build_hierarchy_with_llm(
-                        fallback, "Groq",
-                        candidates, doc_name, page_texts, max_page,
+                        fallback,
+                        "Groq",
+                        candidates,
+                        doc_name,
+                        page_texts,
+                        max_page,
                     )
                 except Exception as e:
-                    logger.warning(
-                        f"[LocalTreeGen] Groq hierarchy failed: {e}"
-                    )
+                    logger.warning(f"[LocalTreeGen] Groq hierarchy failed: {e}")
 
         # Final fallback: level-based heuristic (no LLM)
         if tree_dict is None:
-            logger.warning(
-                "[LocalTreeGen] All LLMs failed. "
-                "Using level-based fallback."
-            )
-            tree_dict = self._candidates_to_default_tree(
-                candidates, doc_name, max_page
-            )
+            logger.warning("[LocalTreeGen] All LLMs failed. Using level-based fallback.")
+            tree_dict = self._candidates_to_default_tree(candidates, doc_name, max_page)
 
         # Step 4: Assign node IDs and compute end indices
         structure = tree_dict.get("structure", [])
@@ -195,9 +186,7 @@ class LocalTreeGenerator:
             try:
                 await self._generate_summaries(structure, page_texts)
             except Exception as e:
-                logger.warning(
-                    f"[LocalTreeGen] Summary generation failed: {e}"
-                )
+                logger.warning(f"[LocalTreeGen] Summary generation failed: {e}")
 
         # Step 6: Embed page texts in leaf nodes
         self._embed_leaf_texts(structure, page_texts)
@@ -209,18 +198,14 @@ class LocalTreeGenerator:
             "structure": structure,
         }
         tree = load_tree_from_dict(final)
-        logger.info(
-            f"[LocalTreeGen] Generated tree: {tree.total_nodes} nodes"
-        )
+        logger.info(f"[LocalTreeGen] Generated tree: {tree.total_nodes} nodes")
         return tree
 
     # -----------------------------------------------------------------
     # Phase 1: Heuristic heading extraction
     # -----------------------------------------------------------------
 
-    def _extract_heading_candidates(
-        self, page_texts: dict[int, str]
-    ) -> list[dict]:
+    def _extract_heading_candidates(self, page_texts: dict[int, str]) -> list[dict]:
         """Extract heading candidates from page text using regex.
 
         Returns:
@@ -258,9 +243,7 @@ class LocalTreeGenerator:
         return sorted(candidates, key=lambda c: c["page"])
 
     @staticmethod
-    def _classify_line(
-        line: str, page_num: int
-    ) -> dict | None:
+    def _classify_line(line: str, page_num: int) -> dict | None:
         """Classify a single line as a heading candidate or None."""
         # Level 1: PART headings
         if _RE_PART.match(line):
@@ -324,19 +307,14 @@ class LocalTreeGenerator:
 
         prompt = build_hierarchy_prompt(candidates, doc_name, sample_texts)
         logger.info(f"[LocalTreeGen] Building hierarchy with {llm_name}...")
-        result = await llm.achat_json(
-            prompt, system_message=TREE_GEN_SYSTEM_PROMPT
-        )
+        result = await llm.achat_json(prompt, system_message=TREE_GEN_SYSTEM_PROMPT)
 
         # Convert LLM output format to our internal format
         doc_desc = result.get("doc_description", "")
         raw_structure = result.get("structure", [])
 
         structure = self._convert_llm_nodes(raw_structure)
-        logger.info(
-            f"[LocalTreeGen] {llm_name} produced "
-            f"{len(structure)} top-level nodes"
-        )
+        logger.info(f"[LocalTreeGen] {llm_name} produced {len(structure)} top-level nodes")
 
         return {
             "doc_description": doc_desc,
@@ -426,9 +404,7 @@ class LocalTreeGenerator:
     # Phase 3: Node IDs, end indices, summaries
     # -----------------------------------------------------------------
 
-    def _assign_node_ids(
-        self, nodes: list[dict], counter: list[int] | None = None
-    ) -> None:
+    def _assign_node_ids(self, nodes: list[dict], counter: list[int] | None = None) -> None:
         """Assign sequential 4-digit DFS-order node IDs."""
         if counter is None:
             counter = [0]
@@ -438,9 +414,7 @@ class LocalTreeGenerator:
             counter[0] += 1
             self._assign_node_ids(node.get("nodes", []), counter)
 
-    def _compute_end_indices(
-        self, nodes: list[dict], max_page: int
-    ) -> None:
+    def _compute_end_indices(self, nodes: list[dict], max_page: int) -> None:
         """Compute end_index for each node.
 
         end_index = next sibling's start_index - 1, or max_page for last.
@@ -459,16 +433,12 @@ class LocalTreeGenerator:
             if children:
                 self._compute_end_indices(children, end_idx)
                 # Parent's end is at least the max of children's ends
-                child_max = max(
-                    c.get("end_index", 0) for c in children
-                )
+                child_max = max(c.get("end_index", 0) for c in children)
                 end_idx = max(end_idx, child_max)
 
             node["end_index"] = end_idx
 
-    async def _generate_summaries(
-        self, nodes: list[dict], page_texts: dict[int, str]
-    ) -> None:
+    async def _generate_summaries(self, nodes: list[dict], page_texts: dict[int, str]) -> None:
         """Generate one-sentence summaries for all nodes.
 
         Tries Ollama first; falls back to Groq on failure.
@@ -480,9 +450,7 @@ class LocalTreeGenerator:
         except Exception:
             fallback = self._get_fallback_llm()
             if fallback is not None:
-                logger.info(
-                    "[LocalTreeGen] Summaries: switching to Groq fallback"
-                )
+                logger.info("[LocalTreeGen] Summaries: switching to Groq fallback")
                 llm = fallback
 
         for node in nodes:
@@ -519,9 +487,7 @@ class LocalTreeGenerator:
     # Helpers
     # -----------------------------------------------------------------
 
-    def _embed_leaf_texts(
-        self, nodes: list[dict], page_texts: dict[int, str]
-    ) -> None:
+    def _embed_leaf_texts(self, nodes: list[dict], page_texts: dict[int, str]) -> None:
         """Embed concatenated page text into leaf nodes."""
         for node in nodes:
             children = node.get("nodes", [])
@@ -543,4 +509,5 @@ class LocalTreeGenerator:
         from finsight_core.pageindex.text_extractor import (
             extract_pages_from_pdf,
         )
+
         return extract_pages_from_pdf(str(pdf_path))

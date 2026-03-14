@@ -57,9 +57,7 @@ class TestMarketDataAggregatorLive:
         """Aggregate market data for AAPL — yfinance should always work."""
         from finsight_mac.mcp.market_data import fetch_market_data
 
-        result = asyncio.get_event_loop().run_until_complete(
-            fetch_market_data("AAPL")
-        )
+        result = asyncio.get_event_loop().run_until_complete(fetch_market_data("AAPL"))
 
         if not result:
             pytest.skip("All data sources returned empty (network issue?)")
@@ -70,7 +68,6 @@ class TestMarketDataAggregatorLive:
 
         # Should have basic valuation data
         has_data = any(
-            key in result
-            for key in ["pe_ratio", "market_cap", "revenue_ttm", "eps_ttm"]
+            key in result for key in ["pe_ratio", "market_cap", "revenue_ttm", "eps_ttm"]
         )
         assert has_data, f"Expected valuation data, got keys: {list(result.keys())}"

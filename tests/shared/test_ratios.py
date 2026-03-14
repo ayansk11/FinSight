@@ -46,8 +46,12 @@ class TestComputeProfitability:
 
     def test_zero_revenue(self) -> None:
         result = compute_profitability(
-            revenue=0, cost_of_goods=0, operating_income=0,
-            net_income=0, total_equity=50, total_assets=100,
+            revenue=0,
+            cost_of_goods=0,
+            operating_income=0,
+            net_income=0,
+            total_equity=50,
+            total_assets=100,
         )
         assert result["gross_margin"] is None
         assert result["net_margin"] is None
@@ -67,7 +71,9 @@ class TestComputeLiquidity:
 
     def test_zero_liabilities(self) -> None:
         result = compute_liquidity(
-            current_assets=200, current_liabilities=0, cash=50,
+            current_assets=200,
+            current_liabilities=0,
+            cash=50,
         )
         assert result["current_ratio"] is None
         assert result["cash_ratio"] is None
@@ -88,8 +94,11 @@ class TestComputeLeverage:
 
     def test_zero_interest(self) -> None:
         result = compute_leverage(
-            total_debt=100, total_equity=200,
-            total_assets=300, ebit=50, interest_expense=0,
+            total_debt=100,
+            total_equity=200,
+            total_assets=300,
+            ebit=50,
+            interest_expense=0,
         )
         assert result["interest_coverage"] is None
 
@@ -111,9 +120,12 @@ class TestComputeValuation:
 
     def test_negative_earnings(self) -> None:
         result = compute_valuation(
-            market_cap=1000, net_income=-50,
-            book_value=200, revenue=500,
-            enterprise_value=1200, ebitda=80,
+            market_cap=1000,
+            net_income=-50,
+            book_value=200,
+            revenue=500,
+            enterprise_value=1200,
+            ebitda=80,
         )
         # Negative P/E is mathematically valid
         assert result["pe_ratio"] == pytest.approx(-20.0)

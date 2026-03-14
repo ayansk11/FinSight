@@ -36,15 +36,11 @@ class ExportBundle(BaseModel):
     findings: list[Finding] = Field(
         default_factory=list, description="All findings from all agents"
     )
-    risk_scores: list[RiskScore] = Field(
-        default_factory=list, description="Risk classifications"
-    )
+    risk_scores: list[RiskScore] = Field(default_factory=list, description="Risk classifications")
     executive_summary: str | None = Field(
         default=None, description="One-paragraph executive summary"
     )
-    full_report: str | None = Field(
-        default=None, description="Full synthesis report text"
-    )
+    full_report: str | None = Field(default=None, description="Full synthesis report text")
 
     def to_json_file(self, path: str) -> None:
         """Write this bundle to a .finsight JSON file."""

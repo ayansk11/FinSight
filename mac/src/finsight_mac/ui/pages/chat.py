@@ -116,8 +116,7 @@ def _run_query(query: str) -> tuple[str, dict]:
         ticker = st.session_state.get("ticker") or _detect_ticker(trees)
 
         filings = [
-            {"display_name": t.get("doc_name", name), "pdf_path": None}
-            for name, t in trees.items()
+            {"display_name": t.get("doc_name", name), "pdf_path": None} for name, t in trees.items()
         ]
 
         initial_state = {
@@ -162,8 +161,7 @@ def _run_query(query: str) -> tuple[str, dict]:
         # Build response text
         if exec_summary and report:
             response = (
-                f"**Executive Summary**\n\n{exec_summary}\n\n---\n\n"
-                f"**Full Report**\n\n{report}"
+                f"**Executive Summary**\n\n{exec_summary}\n\n---\n\n**Full Report**\n\n{report}"
             )
         elif report:
             response = report
@@ -187,6 +185,7 @@ def _run_query(query: str) -> tuple[str, dict]:
 
 def _count_tree_nodes(tree_data: dict) -> int:
     """Count nodes in a raw tree dict."""
+
     def _count(nodes: list) -> int:
         total = len(nodes)
         for n in nodes:

@@ -45,6 +45,7 @@ class FinnhubClient:
         elapsed = time.time() - self._last_request_time
         if elapsed < RATE_LIMIT_DELAY:
             import asyncio
+
             await asyncio.sleep(RATE_LIMIT_DELAY - elapsed)
         self._last_request_time = time.time()
 

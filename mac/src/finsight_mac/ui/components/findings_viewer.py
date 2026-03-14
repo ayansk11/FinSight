@@ -37,9 +37,7 @@ def render_findings(findings: list[dict[str, Any]]) -> None:
             color = _CONFIDENCE_COLORS.get(confidence, "gray")
             content = finding.get("content", "")
 
-            st.markdown(
-                f"**{i + 1}.** :{color}[{confidence}] — {content[:500]}"
-            )
+            st.markdown(f"**{i + 1}.** :{color}[{confidence}] — {content[:500]}")
 
             citations = finding.get("citations", [])
             if citations:

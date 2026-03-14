@@ -87,9 +87,7 @@ class VectorStore:
                 chunk_id = f"{doc_name}_p{page_num}_c{i}"
                 chunks.append(chunk)
                 ids.append(chunk_id)
-                metadatas.append(
-                    {"doc_name": doc_name, "page_num": page_num}
-                )
+                metadatas.append({"doc_name": doc_name, "page_num": page_num})
 
         if chunks:
             self._collection.add(

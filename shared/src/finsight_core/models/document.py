@@ -34,18 +34,10 @@ class Filing(BaseModel):
     fiscal_quarter: int | None = Field(
         default=None, description="Fiscal quarter (1-4) if applicable"
     )
-    pdf_path: str | None = Field(
-        default=None, description="Local path to the PDF file"
-    )
-    tree_path: str | None = Field(
-        default=None, description="Local path to the PageIndex JSON tree"
-    )
-    accession_number: str | None = Field(
-        default=None, description="SEC EDGAR accession number"
-    )
-    url: str | None = Field(
-        default=None, description="URL to the filing on SEC EDGAR"
-    )
+    pdf_path: str | None = Field(default=None, description="Local path to the PDF file")
+    tree_path: str | None = Field(default=None, description="Local path to the PageIndex JSON tree")
+    accession_number: str | None = Field(default=None, description="SEC EDGAR accession number")
+    url: str | None = Field(default=None, description="URL to the filing on SEC EDGAR")
 
     @property
     def display_name(self) -> str:
@@ -74,15 +66,9 @@ class TreeNode(BaseModel):
     node_id: str = Field(description="Sequential 4-digit ID assigned via DFS (e.g., '0003')")
     start_index: int = Field(description="First physical page number (1-indexed, inclusive)")
     end_index: int = Field(description="Last physical page number (1-indexed, inclusive)")
-    summary: str | None = Field(
-        default=None, description="LLM-generated summary of this section"
-    )
-    text: str | None = Field(
-        default=None, description="Raw page text for this section's pages"
-    )
-    nodes: list[TreeNode] = Field(
-        default_factory=list, description="Child sections (recursive)"
-    )
+    summary: str | None = Field(default=None, description="LLM-generated summary of this section")
+    text: str | None = Field(default=None, description="Raw page text for this section's pages")
+    nodes: list[TreeNode] = Field(default_factory=list, description="Child sections (recursive)")
 
     @property
     def page_count(self) -> int:
@@ -122,9 +108,7 @@ class PageIndexTree(BaseModel):
     doc_description: str | None = Field(
         default=None, description="One-sentence document description"
     )
-    structure: list[TreeNode] = Field(
-        description="Top-level sections of the document tree"
-    )
+    structure: list[TreeNode] = Field(description="Top-level sections of the document tree")
 
     @property
     def total_nodes(self) -> int:
@@ -173,16 +157,12 @@ class PageIndexTree(BaseModel):
                 lines.append(f"Description: {self.doc_description}")
             lines.append("")
 
-        for node in (self.structure if _depth == 0 else []):
-            lines.extend(
-                self._outline_node(node, depth=0, max_depth=max_depth)
-            )
+        for node in self.structure if _depth == 0 else []:
+            lines.extend(self._outline_node(node, depth=0, max_depth=max_depth))
         return "\n".join(lines)
 
     @staticmethod
-    def _outline_node(
-        node: TreeNode, depth: int, max_depth: int
-    ) -> list[str]:
+    def _outline_node(node: TreeNode, depth: int, max_depth: int) -> list[str]:
         """Recursively format a node for the outline."""
         indent = "  " * depth
         page_info = f"[pages {node.start_index}-{node.end_index}]"
@@ -192,9 +172,7 @@ class PageIndexTree(BaseModel):
 
         if depth < max_depth:
             for child in node.nodes:
-                lines.extend(
-                    PageIndexTree._outline_node(child, depth + 1, max_depth)
-                )
+                lines.extend(PageIndexTree._outline_node(child, depth + 1, max_depth))
         elif node.nodes:
             lines.append(f"{indent}  ... ({len(node.nodes)} subsections)")
 

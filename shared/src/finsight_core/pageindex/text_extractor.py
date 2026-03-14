@@ -82,8 +82,7 @@ def extract_pages_from_pdf(pdf_path: str) -> dict[int, str]:
         import fitz  # pymupdf
     except ImportError:
         raise ImportError(
-            "pymupdf is required for PDF text extraction. "
-            "Install it with: pip install pymupdf"
+            "pymupdf is required for PDF text extraction. Install it with: pip install pymupdf"
         )
 
     from pathlib import Path

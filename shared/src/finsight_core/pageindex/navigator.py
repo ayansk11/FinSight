@@ -46,9 +46,7 @@ class TreeNavigator:
         self.tree = tree
         # Build flat index for fast lookups
         self._all_nodes: list[TreeNode] = tree.get_all_nodes()
-        self._id_index: dict[str, TreeNode] = {
-            n.node_id: n for n in self._all_nodes
-        }
+        self._id_index: dict[str, TreeNode] = {n.node_id: n for n in self._all_nodes}
         # Build parent path index
         self._paths: dict[str, list[str]] = {}
         for node in tree.structure:
@@ -151,9 +149,7 @@ class TreeNavigator:
         results.sort(key=lambda r: r.score, reverse=True)
         return results
 
-    def search_by_page_range(
-        self, start: int, end: int
-    ) -> list[SearchResult]:
+    def search_by_page_range(self, start: int, end: int) -> list[SearchResult]:
         """Find nodes overlapping with a page range."""
         results: list[SearchResult] = []
 
@@ -177,9 +173,7 @@ class TreeNavigator:
         results.sort(key=lambda r: r.score, reverse=True)
         return results
 
-    def get_section_by_path(
-        self, section_titles: list[str]
-    ) -> TreeNode | None:
+    def get_section_by_path(self, section_titles: list[str]) -> TreeNode | None:
         """Navigate to a section by a path of titles.
 
         Args:
@@ -209,9 +203,7 @@ class TreeNavigator:
 
         return match
 
-    def get_context_for_node(
-        self, node_id: str, include_siblings: bool = True
-    ) -> dict:
+    def get_context_for_node(self, node_id: str, include_siblings: bool = True) -> dict:
         """Get contextual information for a node, useful for LLM prompts.
 
         Returns:
@@ -258,9 +250,7 @@ class TreeNavigator:
                 return parent
         return None
 
-    def _find_parent_recursive(
-        self, current: TreeNode, target_id: str
-    ) -> TreeNode | None:
+    def _find_parent_recursive(self, current: TreeNode, target_id: str) -> TreeNode | None:
         """Recursively search for the parent of a node."""
         for child in current.nodes:
             if child.node_id == target_id:

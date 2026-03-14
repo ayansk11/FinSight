@@ -36,6 +36,7 @@ def convert_html_to_pdf(html_path: Path) -> Path | None:
 
     try:
         from weasyprint import HTML
+
         HTML(str(html_path)).write_pdf(str(pdf_path))
         size_mb = pdf_path.stat().st_size / (1024 * 1024)
         print(f"  Converted: {pdf_path} ({size_mb:.1f} MB)")
@@ -145,6 +146,7 @@ def main() -> None:
 
     # Verify API key is set
     from finsight_mac.config import get_settings
+
     settings = get_settings()
 
     if not settings.pageindex_api_key:
@@ -164,9 +166,7 @@ def main() -> None:
         generate_tree(pdf_path, args.name)
     else:
         # Download from EDGAR, then generate
-        pdf_path = asyncio.run(
-            download_filing(args.ticker, args.filing_type)
-        )
+        pdf_path = asyncio.run(download_filing(args.ticker, args.filing_type))
         if not pdf_path:
             sys.exit(1)
 

@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 _DOCLING_AVAILABLE = False
 try:
     from docling.document_converter import DocumentConverter
+
     _DOCLING_AVAILABLE = True
 except ImportError:
     pass
@@ -68,8 +69,7 @@ class DoclingProcessor:
         """
         if not _DOCLING_AVAILABLE:
             raise ImportError(
-                "Docling is not installed. Install with: "
-                "pip install finsight-mac[docling]"
+                "Docling is not installed. Install with: pip install finsight-mac[docling]"
             )
 
         from docling.datamodel.base_models import InputFormat
@@ -100,9 +100,7 @@ class DoclingProcessor:
             }
         )
 
-        logger.info(
-            f"Docling processor initialized (OCR={enable_ocr}, tables={table_mode})"
-        )
+        logger.info(f"Docling processor initialized (OCR={enable_ocr}, tables={table_mode})")
 
     def process_pdf(self, pdf_path: str | Path) -> DoclingResult:
         """Process a PDF file and extract structured content.
@@ -133,7 +131,7 @@ class DoclingProcessor:
         # Extract page-level text (like PyMuPDF but with correct reading order)
         page_texts = self._build_page_texts(doc)
 
-        total_pages = len(doc.pages) if hasattr(doc, 'pages') else 0
+        total_pages = len(doc.pages) if hasattr(doc, "pages") else 0
 
         logger.info(
             f"Docling processed {pdf_path.name}: "
@@ -164,19 +162,19 @@ class DoclingProcessor:
                 }
 
                 # Get table as Markdown
-                if hasattr(table_item, 'export_to_markdown'):
+                if hasattr(table_item, "export_to_markdown"):
                     table_data["markdown"] = table_item.export_to_markdown()
 
                 # Get table metadata
-                if hasattr(table_item, 'data'):
+                if hasattr(table_item, "data"):
                     td = table_item.data
-                    table_data["rows"] = getattr(td, 'num_rows', 0)
-                    table_data["cols"] = getattr(td, 'num_cols', 0)
+                    table_data["rows"] = getattr(td, "num_rows", 0)
+                    table_data["cols"] = getattr(td, "num_cols", 0)
 
                 # Get page number from provenance
-                if hasattr(table_item, 'prov') and table_item.prov:
+                if hasattr(table_item, "prov") and table_item.prov:
                     prov = table_item.prov[0]
-                    table_data["page"] = getattr(prov, 'page_no', None)
+                    table_data["page"] = getattr(prov, "page_no", None)
 
                 tables.append(table_data)
         except Exception as e:
@@ -202,11 +200,11 @@ class DoclingProcessor:
                 else:
                     element = item
 
-                if not hasattr(element, 'prov') or not element.prov:
+                if not hasattr(element, "prov") or not element.prov:
                     continue
 
                 for prov in element.prov:
-                    page_no = getattr(prov, 'page_no', None)
+                    page_no = getattr(prov, "page_no", None)
                     if page_no is None:
                         continue
 
@@ -214,9 +212,9 @@ class DoclingProcessor:
                     page_num = page_no + 1 if page_no == 0 else page_no
 
                     text = ""
-                    if hasattr(element, 'export_to_markdown'):
+                    if hasattr(element, "export_to_markdown"):
                         text = element.export_to_markdown()
-                    elif hasattr(element, 'text'):
+                    elif hasattr(element, "text"):
                         text = element.text or ""
 
                     if text.strip():
@@ -244,17 +242,17 @@ class DoclingProcessor:
                 else:
                     element = item
 
-                if not hasattr(element, 'prov') or not element.prov:
+                if not hasattr(element, "prov") or not element.prov:
                     continue
 
                 for prov in element.prov:
-                    page_no = getattr(prov, 'page_no', None)
+                    page_no = getattr(prov, "page_no", None)
                     if page_no is None:
                         continue
 
                     page_num = page_no + 1 if page_no == 0 else page_no
 
-                    text = getattr(element, 'text', "") or ""
+                    text = getattr(element, "text", "") or ""
                     if text.strip():
                         if page_num not in page_texts:
                             page_texts[page_num] = ""
@@ -289,11 +287,7 @@ class DoclingResult:
 
     def get_tables_for_pages(self, start: int, end: int) -> list[dict]:
         """Get tables within a page range (for PageIndex node integration)."""
-        return [
-            t for t in self.tables
-            if t.get("page") is not None
-            and start <= t["page"] <= end
-        ]
+        return [t for t in self.tables if t.get("page") is not None and start <= t["page"] <= end]
 
     def get_markdown_for_pages(self, start: int, end: int) -> str:
         """Get concatenated Markdown for a page range."""

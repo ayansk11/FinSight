@@ -35,6 +35,7 @@ def _render_load_trees() -> None:
     st.subheader("Load Pre-Generated Trees")
 
     from finsight_mac.config import get_settings
+
     settings = get_settings()
     trees_dir = settings.trees_dir
 
@@ -125,9 +126,7 @@ def _generate_tree_local(save_path: Path) -> None:
         from finsight_mac.document.pipeline import DocumentPipeline
 
         pipeline = DocumentPipeline()
-        tree = asyncio.run(
-            pipeline.generate_tree_local(str(save_path))
-        )
+        tree = asyncio.run(pipeline.generate_tree_local(str(save_path)))
         _store_tree(save_path.stem, tree)
     except Exception as e:
         st.error(f"Local tree generation failed: {e}")
@@ -149,9 +148,7 @@ def _store_tree(name: str, tree) -> None:
     """Store a generated tree in session state."""
     if "loaded_trees" not in st.session_state:
         st.session_state.loaded_trees = {}
-    st.session_state.loaded_trees[name] = json.loads(
-        tree.model_dump_json()
-    )
+    st.session_state.loaded_trees[name] = json.loads(tree.model_dump_json())
     st.success(f"Tree generated: {tree.total_nodes} nodes")
 
 
@@ -178,6 +175,7 @@ def _render_loaded_documents() -> None:
     for name, tree_data in trees.items():
         with st.expander(f"📄 {name}", expanded=False):
             from finsight_mac.ui.components.tree_viewer import render_tree
+
             render_tree(tree_data)
 
             if st.button("Unload", key=f"unload_{name}"):

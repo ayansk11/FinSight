@@ -93,9 +93,7 @@ class TestFMPClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_balance_sheet("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_balance_sheet("AAPL"))
             assert result["total_assets"] == 364980000000
             assert result["total_equity"] == 56950000000
             assert result["net_debt"] == 76296000000
@@ -126,9 +124,7 @@ class TestFMPClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_cash_flow("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_cash_flow("AAPL"))
             assert result["free_cash_flow"] == 108295000000
             assert result["dividends_paid"] == -15025000000
             assert result["share_repurchases"] == -94949000000
@@ -159,9 +155,7 @@ class TestFMPClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_key_metrics("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_key_metrics("AAPL"))
             assert result["ev_to_ebitda"] == 26.0
             assert result["roic"] == 0.72
             assert result["roe"] == 1.61
@@ -197,9 +191,7 @@ class TestAlphaVantageClient:
 
     def test_no_api_key_returns_empty(self):
         """When no API key is configured, all methods return {}."""
-        with patch(
-            "finsight_mac.mcp.alpha_vantage_client.get_settings"
-        ) as mock_settings:
+        with patch("finsight_mac.mcp.alpha_vantage_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(alpha_vantage_api_key=None)
             from finsight_mac.mcp.alpha_vantage_client import AlphaVantageClient
 
@@ -213,12 +205,8 @@ class TestAlphaVantageClient:
 
     def test_get_company_overview_parses_response(self):
         """get_company_overview correctly maps AV fields."""
-        with patch(
-            "finsight_mac.mcp.alpha_vantage_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                alpha_vantage_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.alpha_vantage_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(alpha_vantage_api_key="test_key")
             from finsight_mac.mcp.alpha_vantage_client import AlphaVantageClient
 
             client = AlphaVantageClient()
@@ -256,12 +244,8 @@ class TestAlphaVantageClient:
 
     def test_get_earnings_parses_response(self):
         """get_earnings correctly computes beat rate and surprise."""
-        with patch(
-            "finsight_mac.mcp.alpha_vantage_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                alpha_vantage_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.alpha_vantage_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(alpha_vantage_api_key="test_key")
             from finsight_mac.mcp.alpha_vantage_client import AlphaVantageClient
 
             client = AlphaVantageClient()
@@ -301,9 +285,7 @@ class TestAlphaVantageClient:
             client._client.get = AsyncMock(return_value=mock_response)
             client._last_request_time = 0.0
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_earnings("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_earnings("AAPL"))
             assert result["beat_count"] == 4
             assert result["miss_count"] == 0
             assert len(result["quarters"]) == 4
@@ -311,12 +293,8 @@ class TestAlphaVantageClient:
 
     def test_get_technical_indicators_interprets_rsi(self):
         """get_technical_indicators correctly interprets RSI signals."""
-        with patch(
-            "finsight_mac.mcp.alpha_vantage_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                alpha_vantage_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.alpha_vantage_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(alpha_vantage_api_key="test_key")
             from finsight_mac.mcp.alpha_vantage_client import AlphaVantageClient
 
             client = AlphaVantageClient()
@@ -400,9 +378,7 @@ class TestEcondbClient:
         client._client = AsyncMock()
         client._client.get = AsyncMock(return_value=mock_response)
 
-        result = asyncio.get_event_loop().run_until_complete(
-            client._get_series("RGDP_US")
-        )
+        result = asyncio.get_event_loop().run_until_complete(client._get_series("RGDP_US"))
         assert result is not None
         assert result["value"] == 3.1
         assert result["date"] == "2024-07-01"
@@ -420,9 +396,7 @@ class TestEcondbClient:
         client._client = AsyncMock()
         client._client.get = AsyncMock(return_value=mock_response)
 
-        result = asyncio.get_event_loop().run_until_complete(
-            client._get_series("RGDP_US")
-        )
+        result = asyncio.get_event_loop().run_until_complete(client._get_series("RGDP_US"))
         assert result is None
 
 
@@ -436,28 +410,20 @@ class TestStockDataClient:
 
     def test_no_api_key_returns_empty(self):
         """When no API key is configured, get_stock_news returns {}."""
-        with patch(
-            "finsight_mac.mcp.stockdata_client.get_settings"
-        ) as mock_settings:
+        with patch("finsight_mac.mcp.stockdata_client.get_settings") as mock_settings:
             mock_settings.return_value = MagicMock(stockdata_api_key=None)
             from finsight_mac.mcp.stockdata_client import StockDataClient
 
             client = StockDataClient()
             assert client._client is None
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_stock_news("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_stock_news("AAPL"))
             assert result == {}
 
     def test_get_stock_news_parses_response(self):
         """get_stock_news correctly parses articles and computes sentiment."""
-        with patch(
-            "finsight_mac.mcp.stockdata_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                stockdata_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.stockdata_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(stockdata_api_key="test_key")
             from finsight_mac.mcp.stockdata_client import StockDataClient
 
             client = StockDataClient()
@@ -493,9 +459,7 @@ class TestStockDataClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_stock_news("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_stock_news("AAPL"))
             assert result["article_count"] == 3
             assert len(result["articles"]) == 3
             assert result["articles"][0]["title"] == "Apple Reports Record Q4"
@@ -506,12 +470,8 @@ class TestStockDataClient:
 
     def test_negative_sentiment(self):
         """Correctly identifies negative overall sentiment."""
-        with patch(
-            "finsight_mac.mcp.stockdata_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                stockdata_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.stockdata_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(stockdata_api_key="test_key")
             from finsight_mac.mcp.stockdata_client import StockDataClient
 
             client = StockDataClient()
@@ -540,20 +500,14 @@ class TestStockDataClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_stock_news("AAPL")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_stock_news("AAPL"))
             assert result["overall_sentiment"] == "negative"
             assert result["avg_sentiment"] < -0.2
 
     def test_empty_response_returns_empty(self):
         """Empty API response returns {}."""
-        with patch(
-            "finsight_mac.mcp.stockdata_client.get_settings"
-        ) as mock_settings:
-            mock_settings.return_value = MagicMock(
-                stockdata_api_key="test_key"
-            )
+        with patch("finsight_mac.mcp.stockdata_client.get_settings") as mock_settings:
+            mock_settings.return_value = MagicMock(stockdata_api_key="test_key")
             from finsight_mac.mcp.stockdata_client import StockDataClient
 
             client = StockDataClient()
@@ -565,7 +519,5 @@ class TestStockDataClient:
             client._client = AsyncMock()
             client._client.get = AsyncMock(return_value=mock_response)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                client.get_stock_news("INVALID")
-            )
+            result = asyncio.get_event_loop().run_until_complete(client.get_stock_news("INVALID"))
             assert result == {}

@@ -21,6 +21,7 @@ from finsight_core.models.export import ExportBundle
 # TreeNode tests
 # ============================================================
 
+
 class TestTreeNode:
     def test_leaf_node(self) -> None:
         node = TreeNode(
@@ -53,12 +54,18 @@ class TestTreeNode:
 
     def test_find_by_id(self) -> None:
         child = TreeNode(
-            title="Products", node_id="0004",
-            start_index=3, end_index=6, nodes=[],
+            title="Products",
+            node_id="0004",
+            start_index=3,
+            end_index=6,
+            nodes=[],
         )
         parent = TreeNode(
-            title="Item 1", node_id="0003",
-            start_index=2, end_index=12, nodes=[child],
+            title="Item 1",
+            node_id="0003",
+            start_index=2,
+            end_index=12,
+            nodes=[child],
         )
         assert parent.find_by_id("0004") == child
         assert parent.find_by_id("0003") == parent
@@ -66,16 +73,25 @@ class TestTreeNode:
 
     def test_all_nodes_flat(self) -> None:
         grandchild = TreeNode(
-            title="iPhone", node_id="0005",
-            start_index=3, end_index=4, nodes=[],
+            title="iPhone",
+            node_id="0005",
+            start_index=3,
+            end_index=4,
+            nodes=[],
         )
         child = TreeNode(
-            title="Products", node_id="0004",
-            start_index=3, end_index=6, nodes=[grandchild],
+            title="Products",
+            node_id="0004",
+            start_index=3,
+            end_index=6,
+            nodes=[grandchild],
         )
         parent = TreeNode(
-            title="Item 1", node_id="0003",
-            start_index=2, end_index=12, nodes=[child],
+            title="Item 1",
+            node_id="0003",
+            start_index=2,
+            end_index=12,
+            nodes=[child],
         )
         flat = parent.all_nodes_flat()
         assert len(flat) == 3
@@ -87,6 +103,7 @@ class TestTreeNode:
 # ============================================================
 # PageIndexTree tests
 # ============================================================
+
 
 class TestPageIndexTree:
     def test_from_fixture(self, sample_tree_dict: dict) -> None:
@@ -127,6 +144,7 @@ class TestPageIndexTree:
 # Filing tests
 # ============================================================
 
+
 class TestFiling:
     def test_display_name(self) -> None:
         filing = Filing(
@@ -144,6 +162,7 @@ class TestFiling:
 # ============================================================
 # Analysis model tests
 # ============================================================
+
 
 class TestAnalysisModels:
     def test_citation_short_ref(self) -> None:
@@ -224,6 +243,7 @@ class TestAnalysisModels:
 # ============================================================
 # ExportBundle tests
 # ============================================================
+
 
 class TestExportBundle:
     def test_roundtrip_json(self, tmp_path: Path, sample_tree_dict: dict) -> None:

@@ -90,13 +90,9 @@ class RLMClient:
         if self._rlm is not None:
             return await self._analyze_with_rlm(query, context)
         else:
-            return await self._analyze_fallback(
-                query, filing_names, tree_outlines, page_texts
-            )
+            return await self._analyze_fallback(query, filing_names, tree_outlines, page_texts)
 
-    async def _analyze_with_rlm(
-        self, query: str, context: str
-    ) -> RLMResult:
+    async def _analyze_with_rlm(self, query: str, context: str) -> RLMResult:
         """Use the official RLM library for analysis."""
         try:
             prompt = f"{query}\n\nContext:\n{context}"
@@ -149,10 +145,7 @@ class RLMClient:
             iterations += 1
 
         # Step 2: Synthesize across filings
-        synthesis_prompt = (
-            f"Query: {query}\n\n"
-            f"Individual filing analyses:\n"
-        )
+        synthesis_prompt = f"Query: {query}\n\nIndividual filing analyses:\n"
         for name, analysis in individual_analyses.items():
             synthesis_prompt += f"\n=== {name} ===\n{analysis}\n"
 

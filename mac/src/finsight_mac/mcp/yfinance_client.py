@@ -100,8 +100,11 @@ class YFinanceClient:
                 period = str(col.date()) if hasattr(col, "date") else str(col)
                 result["income_period"] = period
                 income_rows = [
-                    "Total Revenue", "Gross Profit",
-                    "Operating Income", "Net Income", "EBITDA",
+                    "Total Revenue",
+                    "Gross Profit",
+                    "Operating Income",
+                    "Net Income",
+                    "EBITDA",
                 ]
                 for row in income_rows:
                     if row in latest.index:

@@ -39,13 +39,13 @@ async def run_test(query: str, model: str, tree_path: str) -> None:
     cfg._settings = Settings(ollama_model=model)
     settings = get_settings()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("FinSight End-to-End Test")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Model:  {settings.ollama_model}")
     print(f"Query:  {query}")
     print(f"Tree:   {tree_path}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     # Step 1: Check Ollama health
     print("[1/5] Checking Ollama connection...")
@@ -103,7 +103,7 @@ async def run_test(query: str, model: str, tree_path: str) -> None:
 
     # Step 5: Display results
     print("\n[5/5] Results")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     route = result.get("route", "unknown")
     agents = result.get("agents_to_run", [])
@@ -139,7 +139,7 @@ async def run_test(query: str, model: str, tree_path: str) -> None:
             content = f.get("content", "")[:200]
             agent = f.get("agent", "?")
             confidence = f.get("confidence", "?")
-            print(f"\n  [{i+1}] ({agent}, {confidence})")
+            print(f"\n  [{i + 1}] ({agent}, {confidence})")
             print(f"      {content}")
 
     if risk_scores:
@@ -149,9 +149,9 @@ async def run_test(query: str, model: str, tree_path: str) -> None:
             severity = rs.get("severity", 0)
             print(f"  {tech}: {severity:.2f}")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Total time: {elapsed:.1f}s")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
 
 def main() -> None:

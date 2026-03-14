@@ -29,11 +29,7 @@ class TestHeadingExtraction:
         titles = [c["title"] for c in candidates]
         assert "PART I" in titles
         assert "PART II" in titles
-        assert all(
-            c["level"] == 1
-            for c in candidates
-            if c["title"].startswith("PART")
-        )
+        assert all(c["level"] == 1 for c in candidates if c["title"].startswith("PART"))
 
     def test_detects_item_headings(self):
         gen = self._gen()
@@ -47,11 +43,7 @@ class TestHeadingExtraction:
         assert any("Item 1." in t for t in titles)
         assert any("Item 1A." in t for t in titles)
         assert any("Item 7." in t for t in titles)
-        assert all(
-            c["level"] == 2
-            for c in candidates
-            if c["title"].startswith("Item")
-        )
+        assert all(c["level"] == 2 for c in candidates if c["title"].startswith("Item"))
 
     def test_detects_signatures(self):
         gen = self._gen()
@@ -82,10 +74,7 @@ class TestHeadingExtraction:
             13: "MACROECONOMIC AND INDUSTRY RISKS\nThe Company is subject to...",
         }
         candidates = gen._extract_heading_candidates(page_texts)
-        assert any(
-            c["title"] == "MACROECONOMIC AND INDUSTRY RISKS"
-            for c in candidates
-        )
+        assert any(c["title"] == "MACROECONOMIC AND INDUSTRY RISKS" for c in candidates)
 
     def test_empty_pages_handled(self):
         gen = self._gen()
@@ -243,9 +232,7 @@ class TestDefaultTreeFallback:
             {"title": "PART II", "page": 30, "level": 1},
             {"title": "Item 7. MD&A", "page": 40, "level": 2},
         ]
-        result = gen._candidates_to_default_tree(
-            candidates, "TEST_10K", max_page=100
-        )
+        result = gen._candidates_to_default_tree(candidates, "TEST_10K", max_page=100)
 
         structure = result["structure"]
         assert len(structure) == 1  # One root node
@@ -267,9 +254,7 @@ class TestDefaultTreeFallback:
         candidates = [
             {"title": "Item 1. Business", "page": 5, "level": 2},
         ]
-        result = gen._candidates_to_default_tree(
-            candidates, "TEST", max_page=50
-        )
+        result = gen._candidates_to_default_tree(candidates, "TEST", max_page=50)
         root = result["structure"][0]
         # Item should be a direct child of root (no PART parent)
         assert len(root["nodes"]) == 1
@@ -371,9 +356,7 @@ class TestFullPipeline:
     def test_fallback_on_llm_failure(self):
         """Falls back to default tree when Ollama fails."""
         mock_llm = AsyncMock()
-        mock_llm.achat_json = AsyncMock(
-            side_effect=Exception("Ollama down")
-        )
+        mock_llm.achat_json = AsyncMock(side_effect=Exception("Ollama down"))
         mock_llm.achat = AsyncMock(side_effect=Exception("Ollama down"))
 
         gen = LocalTreeGenerator(llm=mock_llm)

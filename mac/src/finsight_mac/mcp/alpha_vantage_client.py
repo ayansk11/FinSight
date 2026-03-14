@@ -44,6 +44,7 @@ class AlphaVantageClient:
         elapsed = time.time() - self._last_request_time
         if elapsed < RATE_LIMIT_DELAY:
             import asyncio
+
             await asyncio.sleep(RATE_LIMIT_DELAY - elapsed)
         self._last_request_time = time.time()
 
@@ -179,13 +180,15 @@ class AlphaVantageClient:
         Returns:
             Dict with rsi_14, sma_50, sma_200, and signal interpretation.
         """
-        data = await self._get({
-            "function": "RSI",
-            "symbol": ticker,
-            "interval": "daily",
-            "time_period": "14",
-            "series_type": "close",
-        })
+        data = await self._get(
+            {
+                "function": "RSI",
+                "symbol": ticker,
+                "interval": "daily",
+                "time_period": "14",
+                "series_type": "close",
+            }
+        )
         if not data:
             return {}
 

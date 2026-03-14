@@ -75,7 +75,7 @@ enriched with the individual agent findings below.
     return f"""## Task: Synthesize Financial Analysis Report
 
 **Query:** {query}
-**Filings Analyzed:** {', '.join(filing_names)}
+**Filings Analyzed:** {", ".join(filing_names)}
 {rlm_section}
 ## Document Intelligence Findings
 {doc_intel_findings}

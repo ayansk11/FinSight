@@ -68,7 +68,8 @@ Examples:
         help="Model name to record in the bundle metadata.",
     )
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose logging.",
     )
@@ -139,14 +140,8 @@ Examples:
             try:
                 data = json.loads(findings_path.read_text())
                 if isinstance(data, dict):
-                    findings = [
-                        Finding.model_validate(f)
-                        for f in data.get("findings", [])
-                    ]
-                    risk_scores = [
-                        RiskScore.model_validate(r)
-                        for r in data.get("risk_scores", [])
-                    ]
+                    findings = [Finding.model_validate(f) for f in data.get("findings", [])]
+                    risk_scores = [RiskScore.model_validate(r) for r in data.get("risk_scores", [])]
                 elif isinstance(data, list):
                     findings = [Finding.model_validate(f) for f in data]
                 print(f"Loaded {len(findings)} findings, {len(risk_scores)} risk scores")

@@ -115,9 +115,7 @@ def main() -> None:
     tree = load_tree_from_dict(tree_dict)
 
     # Save
-    output = args.output or str(
-        raw_path.parent / f"{doc_name}_structure.json"
-    )
+    output = args.output or str(raw_path.parent / f"{doc_name}_structure.json")
     tree_to_json(tree, output)
 
     print(f"Converted: {raw_path.name} → {Path(output).name}")

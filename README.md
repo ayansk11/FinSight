@@ -12,10 +12,11 @@ FinSight is a multi-agent AI system that analyzes SEC filings (10-K, 10-Q, 8-K) 
 - **PageIndex Tree Navigation** — Hierarchical document structure maps for precise section-level extraction with citations
 - **Docling Document AI** — IBM's AI-powered document conversion with layout analysis, table extraction, and structured Markdown output as the default PDF processor
 - **Local Ollama Inference** — Runs entirely offline using Qwen3.5 via Ollama — no API keys required for core analysis. Supports multiple models (Qwen3.5:9b, Qwen3:8b, Qwen3.5:4b, or any Ollama-compatible model)
-- **Market Data Integration** — Real-time financial data from Yahoo Finance, FRED, and Finnhub via MCP-style data servers
+- **Groq Cloud Fallback** — When Ollama times out on large documents (100+ pages), automatically falls back to Groq's fast cloud inference (free tier: 14,400 requests/day)
+- **Market Data Integration** — Real-time financial data from Yahoo Finance, FRED, Finnhub, Financial Modeling Prep, Alpha Vantage, Econdb, and StockData via MCP-style data servers
 - **MITRE F3 Risk Framework** — Risk classification using a financial threat taxonomy inspired by MITRE ATT&CK
 - **Cross-Document Reasoning (RLM)** — Recursive Language Model integration for multi-filing comparative analysis. When multiple filings are loaded, the router activates RLM synthesis for cross-document reasoning with iterative refinement (up to 15 iterations)
-- **Local Tree Generation** — Heuristic heading detection + Ollama refinement for generating document structure trees from raw PDFs
+- **Local Tree Generation** — Heuristic heading detection + LLM refinement (Ollama → Groq fallback) for generating document structure trees from raw PDFs
 - **Streamlit Web UI** — Interactive chat interface, document manager, analysis dashboard with findings/risk scores/export
 - **iPhone Export** — `.finsight` bundle export for companion iOS app
 
@@ -56,12 +57,15 @@ FinSight is a multi-agent AI system that analyzes SEC filings (10-K, 10-Q, 8-K) 
     └─────────────────────────────────────────────────────────────────┘
              │                │                     │
              ▼                ▼                     ▼
-    ┌────────────────┐ ┌─────────────┐ ┌─────────────────────────────┐
-    │  Ollama LLM    │ │  PageIndex  │ │     MCP Data Servers        │
-    │  (Qwen3.5:9b)  │ │   Trees     │ │  ┌───────┐┌───────┐┌─────┐│
-    │  localhost:11434│ │  (JSON)     │ │  │ FRED  ││Finnhub││ yFin││
-    └────────────────┘ └─────────────┘ │  └───────┘└───────┘└─────┘│
-                                        └─────────────────────────────┘
+    ┌────────────────┐ ┌─────────────┐ ┌──────────────────────────────────────┐
+    │  Ollama LLM    │ │  PageIndex  │ │         MCP Data Servers              │
+    │  (Qwen3.5:9b)  │ │   Trees     │ │  ┌──────┐┌───────┐┌─────┐┌───┐      │
+    │  localhost:11434│ │  (JSON)     │ │  │ FRED ││Finnhub││ yFin││FMP│      │
+    └────────────────┘ └─────────────┘ │  └──────┘└───────┘└─────┘└───┘      │
+                                        │  ┌────────────┐┌───────┐┌─────────┐ │
+                                        │  │AlphaVantage││Econdb ││StockData│ │
+                                        │  └────────────┘└───────┘└─────────┘ │
+                                        └──────────────────────────────────────┘
 ```
 
 ---
@@ -153,12 +157,17 @@ FinSight/
 │       │   ├── pipeline.py          # PDF → PageIndex tree pipeline
 │       │   └── local_tree_generator.py  # Offline tree generation
 │       ├── mcp/                     # Market data servers
-│       │   ├── market_data.py       # Aggregator (FRED + Finnhub + yfinance)
+│       │   ├── market_data.py       # Aggregator (all 6 data sources)
 │       │   ├── fred.py              # Federal Reserve data
 │       │   ├── finnhub_client.py    # Market quotes & fundamentals
-│       │   └── yfinance_client.py   # Yahoo Finance (no API key)
+│       │   ├── yfinance_client.py   # Yahoo Finance (no API key)
+│       │   ├── fmp_client.py        # Financial Modeling Prep (statements, ratios)
+│       │   ├── alpha_vantage_client.py  # Historical data & technical indicators
+│       │   ├── econdb_client.py     # Global macro data (no API key)
+│       │   └── stockdata_client.py  # Market news & sentiment
 │       ├── llm/
 │       │   ├── ollama_client.py     # Async Ollama wrapper
+│       │   ├── groq_client.py       # Groq cloud fallback client
 │       │   └── rlm_client.py        # Recursive Language Model client
 │       ├── ui/                      # Streamlit web interface
 │       │   ├── app.py               # Main entry point
@@ -271,10 +280,13 @@ uv run python scripts/test_e2e.py --query "What are Apple's main risk factors?"
 | `OLLAMA_BASE_URL` | No | Ollama endpoint (default: `http://localhost:11434`) |
 | `FRED_API_KEY` | No | FRED macroeconomic data (free at fred.stlouisfed.org) |
 | `FINNHUB_API_KEY` | No | Finnhub market data (free at finnhub.io) |
+| `ALPHA_VANTAGE_API_KEY` | No | Alpha Vantage historical data & technical indicators (free at alphavantage.co) |
+| `STOCKDATA_API_KEY` | No | StockData.org market news & sentiment (free at stockdata.org) |
+| `GROQ_API_KEY` | No | Groq cloud fallback when Ollama times out (free at console.groq.com) |
 | `PAGEINDEX_API_KEY` | No | PageIndex cloud tree generation |
 | `OPENAI_API_KEY` | No | OpenAI for cloud tree generation fallback |
 
-Core analysis works with **zero API keys** — only Ollama is required. Market data APIs are optional and enhance the Quantitative Agent.
+Core analysis works with **zero API keys** — only Ollama is required. Market data APIs are optional and enhance the Quantitative Agent. Econdb provides global macro data with no key needed. **Groq is strongly recommended** for generating trees from large (100+ page) filings — it prevents timeout issues on consumer hardware.
 
 ---
 
@@ -289,7 +301,7 @@ FinSight uses hierarchical **PageIndex trees** to navigate SEC filings efficient
 3. Extracts only relevant pages, maintaining precise citations
 
 Trees can be generated via:
-- **Local Ollama** — Heuristic heading detection + LLM refinement (offline, no API key)
+- **Local Ollama → Groq fallback** — Heuristic heading detection + LLM refinement. Tries local Ollama first; auto-falls back to Groq cloud when Ollama times out on large documents
 - **PageIndex Cloud API** — High-quality cloud-based generation
 - **Pre-generated** — Load from `data/trees/` directory
 
@@ -364,11 +376,11 @@ Each risk receives a severity score (0.0–1.0) with supporting evidence and cit
 | Component | Technology |
 |---|---|
 | Orchestration | LangGraph (StateGraph) |
-| LLM | Ollama (Qwen3.5:9b default, multi-model) |
+| LLM | Ollama (Qwen3.5:9b default, multi-model) + Groq cloud fallback |
 | Document AI | Docling (IBM) — layout analysis, tables |
 | Document Parsing | PyMuPDF, PageIndex |
 | Cross-Doc Reasoning | RLM (Recursive Language Model) |
-| Market Data | yfinance, FRED API, Finnhub |
+| Market Data | yfinance, FRED API, Finnhub, FMP, Alpha Vantage, Econdb, StockData |
 | Data Models | Pydantic v2 |
 | Web UI | Streamlit |
 | Package Manager | uv (workspace) |

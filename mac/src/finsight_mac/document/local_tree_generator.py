@@ -1,13 +1,13 @@
-"""Local Ollama-based PageIndex tree generator.
+"""Local PageIndex tree generator with Groq cloud fallback.
 
 Generates hierarchical document structure trees from SEC filing PDFs
-using heuristic heading detection + Ollama refinement. No external
-API keys required — works entirely offline.
+using heuristic heading detection + LLM refinement. Tries local Ollama
+first; falls back to Groq cloud API when Ollama times out.
 
 Flow:
   PDF → extract page texts → regex heading detection →
-  Ollama hierarchy refinement → assign node IDs → optional summaries →
-  validated PageIndexTree
+  LLM hierarchy refinement (Ollama → Groq fallback) →
+  assign node IDs → optional summaries → validated PageIndexTree
 """
 
 from __future__ import annotations
@@ -59,7 +59,10 @@ _SKIP_PATTERNS = [
 
 
 class LocalTreeGenerator:
-    """Generate PageIndex trees locally using PDF heuristics + Ollama.
+    """Generate PageIndex trees using PDF heuristics + LLM (Ollama → Groq).
+
+    Tries local Ollama first. If it times out (common for large 100+ page
+    filings on consumer hardware), automatically falls back to Groq cloud.
 
     Example:
         >>> gen = LocalTreeGenerator()
@@ -68,6 +71,7 @@ class LocalTreeGenerator:
 
     def __init__(self, llm=None) -> None:
         self._llm = llm
+        self._fallback_llm = None
 
     def _get_llm(self):
         """Lazy-init OllamaClient."""
@@ -75,6 +79,18 @@ class LocalTreeGenerator:
             from finsight_mac.llm.ollama_client import OllamaClient
             self._llm = OllamaClient()
         return self._llm
+
+    def _get_fallback_llm(self):
+        """Lazy-init Groq fallback client (returns None if not configured)."""
+        if self._fallback_llm is None:
+            from finsight_mac.llm.groq_client import GroqClient
+            if GroqClient.is_available():
+                try:
+                    self._fallback_llm = GroqClient()
+                    logger.info("[LocalTreeGen] Groq fallback available")
+                except Exception as e:
+                    logger.debug(f"[LocalTreeGen] Groq init failed: {e}")
+        return self._fallback_llm
 
     async def generate(
         self,
@@ -128,15 +144,42 @@ class LocalTreeGenerator:
             }
             return load_tree_from_dict(tree_dict)
 
-        # Step 3: Build hierarchy (Ollama or fallback)
+        # Step 3: Build hierarchy (Ollama → Groq → level-based fallback)
+        tree_dict = None
+
+        # Try Ollama first
         try:
-            tree_dict = await self._build_hierarchy(
-                candidates, doc_name, page_texts, max_page
+            tree_dict = await self._build_hierarchy_with_llm(
+                self._get_llm(), "Ollama",
+                candidates, doc_name, page_texts, max_page,
             )
         except Exception as e:
             logger.warning(
-                f"[LocalTreeGen] Ollama hierarchy failed: {e}. "
-                f"Using level-based fallback."
+                f"[LocalTreeGen] Ollama hierarchy failed: {e}"
+            )
+
+        # Try Groq fallback if Ollama failed
+        if tree_dict is None:
+            fallback = self._get_fallback_llm()
+            if fallback is not None:
+                try:
+                    logger.info(
+                        "[LocalTreeGen] Falling back to Groq cloud..."
+                    )
+                    tree_dict = await self._build_hierarchy_with_llm(
+                        fallback, "Groq",
+                        candidates, doc_name, page_texts, max_page,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"[LocalTreeGen] Groq hierarchy failed: {e}"
+                    )
+
+        # Final fallback: level-based heuristic (no LLM)
+        if tree_dict is None:
+            logger.warning(
+                "[LocalTreeGen] All LLMs failed. "
+                "Using level-based fallback."
             )
             tree_dict = self._candidates_to_default_tree(
                 candidates, doc_name, max_page
@@ -250,16 +293,27 @@ class LocalTreeGenerator:
     # Phase 2: Hierarchy construction
     # -----------------------------------------------------------------
 
-    async def _build_hierarchy(
+    async def _build_hierarchy_with_llm(
         self,
+        llm,
+        llm_name: str,
         candidates: list[dict],
         doc_name: str,
         page_texts: dict[int, str],
         max_page: int,
     ) -> dict:
-        """Use Ollama to organize candidates into a nested tree.
+        """Use an LLM to organize candidates into a nested tree.
 
-        Returns dict with "doc_description" and "structure" keys.
+        Args:
+            llm: LLM client (OllamaClient or GroqClient).
+            llm_name: Display name for logging (e.g., "Ollama", "Groq").
+            candidates: Heading candidates from heuristic extraction.
+            doc_name: Document name.
+            page_texts: Page number → text mapping.
+            max_page: Total page count.
+
+        Returns:
+            Dict with "doc_description" and "structure" keys.
         """
         # Build sample texts (first 150 chars per heading's page)
         sample_texts: dict[int, str] = {}
@@ -269,7 +323,7 @@ class LocalTreeGenerator:
                 sample_texts[pg] = page_texts[pg][:150]
 
         prompt = build_hierarchy_prompt(candidates, doc_name, sample_texts)
-        llm = self._get_llm()
+        logger.info(f"[LocalTreeGen] Building hierarchy with {llm_name}...")
         result = await llm.achat_json(
             prompt, system_message=TREE_GEN_SYSTEM_PROMPT
         )
@@ -279,6 +333,10 @@ class LocalTreeGenerator:
         raw_structure = result.get("structure", [])
 
         structure = self._convert_llm_nodes(raw_structure)
+        logger.info(
+            f"[LocalTreeGen] {llm_name} produced "
+            f"{len(structure)} top-level nodes"
+        )
 
         return {
             "doc_description": doc_desc,
@@ -411,8 +469,21 @@ class LocalTreeGenerator:
     async def _generate_summaries(
         self, nodes: list[dict], page_texts: dict[int, str]
     ) -> None:
-        """Generate one-sentence summaries for all nodes via Ollama."""
+        """Generate one-sentence summaries for all nodes.
+
+        Tries Ollama first; falls back to Groq on failure.
+        """
         llm = self._get_llm()
+        # Pre-check: try one summary with Ollama; switch to Groq on timeout
+        try:
+            await llm.achat("Say 'ok'.", temperature=0)
+        except Exception:
+            fallback = self._get_fallback_llm()
+            if fallback is not None:
+                logger.info(
+                    "[LocalTreeGen] Summaries: switching to Groq fallback"
+                )
+                llm = fallback
 
         for node in nodes:
             start = node.get("start_index", 1)

@@ -1,1 +1,1 @@
-"""LLM client layer — Ollama wrapper and RLM integration."""
+"""LLM client layer — Ollama wrapper, Groq fallback, and RLM integration."""

@@ -81,9 +81,34 @@ class Settings(BaseSettings):
         default=None,
         description="Financial Modeling Prep API key",
     )
+    alpha_vantage_api_key: str | None = Field(
+        default=None,
+        description="Alpha Vantage API key for historical data and technical indicators",
+    )
+    stockdata_api_key: str | None = Field(
+        default=None,
+        description="StockData.org API key for market news and sentiment",
+    )
     sec_user_agent: str = Field(
         default="FinSight research@example.com",
         description="User-Agent header for SEC EDGAR requests",
+    )
+
+    # --- Groq Cloud Fallback ---
+    groq_api_key: str | None = Field(
+        default=None,
+        description="Groq API key for cloud LLM fallback when Ollama times out",
+    )
+    groq_model: str = Field(
+        default="llama-3.3-70b-versatile",
+        description=(
+            "Groq model name. Options: llama-3.3-70b-versatile (default, best for JSON), "
+            "meta-llama/llama-4-scout-17b-16e-instruct, llama-3.1-8b-instant"
+        ),
+    )
+    groq_base_url: str = Field(
+        default="https://api.groq.com/openai/v1",
+        description="Groq OpenAI-compatible API base URL",
     )
 
     # --- Agent Configuration ---

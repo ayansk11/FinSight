@@ -186,9 +186,11 @@ class DocumentPipeline:
         doc_name: str | None = None,
         add_summaries: bool = True,
     ) -> PageIndexTree:
-        """Generate a PageIndex tree using local Ollama.
+        """Generate a PageIndex tree using local Ollama (with Groq fallback).
 
-        No API keys required — works entirely offline.
+        Uses local Ollama for LLM calls. When Ollama times out (common
+        for large 100+ page filings on consumer hardware), automatically
+        falls back to Groq cloud API if GROQ_API_KEY is configured.
 
         Args:
             pdf_path: Path to the PDF file.
@@ -233,7 +235,7 @@ class DocumentPipeline:
 
         Fallback chain:
           1. Cloud API (if PAGEINDEX_API_KEY is set)
-          2. Local Ollama (always available when Ollama running)
+          2. Local Ollama → Groq cloud → heuristic (auto-fallback)
           3. Legacy page_index() (if installed with OpenAI key)
 
         Args:

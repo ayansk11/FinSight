@@ -117,7 +117,7 @@ def _show_model_status() -> None:
             models = response.json().get("models", [])
             model_names = [m["name"] for m in models]
             if any(selected_model in n for n in model_names):
-                st.sidebar.success("Connected", icon="✅")
+                st.sidebar.success("Ollama connected", icon="✅")
             else:
                 st.sidebar.warning(
                     f"Model not found. Pull with: ollama pull {selected_model}",
@@ -127,6 +127,14 @@ def _show_model_status() -> None:
             st.sidebar.error("Ollama not responding", icon="❌")
     except Exception:
         st.sidebar.error("Ollama not running", icon="❌")
+
+    # Groq fallback status
+    if settings.groq_api_key:
+        st.sidebar.caption(
+            f"Groq fallback: {settings.groq_model.split('/')[-1]}"
+        )
+    else:
+        st.sidebar.caption("Groq fallback: not configured")
 
 
 if __name__ == "__main__":

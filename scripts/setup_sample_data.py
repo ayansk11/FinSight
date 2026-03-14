@@ -204,6 +204,14 @@ Examples:
 
         print(f"  Generating PageIndex tree with {model}...")
         print("  (this may take 2-5 minutes depending on document size)")
+
+        # Check if Groq fallback is available
+        from finsight_mac.llm.groq_client import GroqClient
+
+        if GroqClient.is_available():
+            print("  Groq fallback: enabled (will auto-switch if Ollama times out)")
+        else:
+            print("  Groq fallback: not configured (set GROQ_API_KEY for faster processing)")
         print()
 
         # Override model if specified
